@@ -11,6 +11,7 @@ services:
       - "8000"
     volumes:
       - code-volume:/course/code/
+      - media-volume:/course/code/media
     networks:
       - web_network
       - db_network
@@ -27,6 +28,7 @@ services:
       - "7999"
     volumes:
       - code-volume:/course/code/
+      - media-volume:/course/code/media
     networks:
       - web_network
       - db_network
