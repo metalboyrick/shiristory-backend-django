@@ -4,12 +4,12 @@ services:
   shiristory:
     container_name: shiristory
     restart: always
-    build: ./shiristory
+    build: .
     depends_on:
       - mongodb
     expose:
       - "8000"
-      - "520"
+      - "7999"
     volumes:
       - ./shiristory:/course/code/
     networks:
@@ -27,6 +27,7 @@ services:
     depends_on:
       - shiristory
     volumes:
+      - ./nginx/shiritori-dev.conf:/etc/nginx/conf.d/shiritori.conf
       - ./media:/course/code/media
     networks:
       - web_network
@@ -39,27 +40,6 @@ services:
       - "6379"
     networks:
       - db_network
-
-  daphne:
-    container_name: daphne
-    restart: always
-    build: .
-    command: bash -c "daphne -b 0.0.0.0 -p 8001  thu_lost_and_found_backend.asgi:application"
-    expose:
-      - "8001"
-    environment:
-      - REDIS_HOST=redis
-    depends_on:
-      - app
-    links:
-      - redis
-    networks:
-      - web_network
-      - db_network
-    volumes:
-      - .:/code
-      - static-volume:/code/static
-      - media-volume:/code/media
 
   mongodb:
     container_name: mongodb

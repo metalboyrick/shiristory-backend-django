@@ -4,18 +4,33 @@ services:
   shiristory:
     container_name: shiristory
     restart: always
-    build: ./shiristory
+    build: .
     depends_on:
       - mongodb
     expose:
       - "8000"
-      - "520"
     volumes:
-      - ./shiristory:/course/code/
+      - code-volume:/course/code/
     networks:
       - web_network
       - db_network
-     command: bash -c "gunicorn shiristory.wsgi"
+    command: gunicorn -w 4 -k gthread -b 0.0.0.0:8000 shiristory.wsgi
+
+  shiristory_ws:
+    container_name: shiristory_ws
+    restart: always
+    build: .
+    depends_on:
+      - shiristory
+    command: daphne -b 0.0.0.0 -p 7999 shiristory.asgi:application
+    expose:
+      - "7999"
+    volumes:
+      - code-volume:/course/code/
+    networks:
+      - web_network
+      - db_network
+
 
   nginx:
     container_name: nginx
@@ -27,9 +42,18 @@ services:
     depends_on:
       - shiristory
     volumes:
-      - ./media:/course/code/media
+      - media-volume:/course/code/media
     networks:
       - web_network
+
+  redis:
+    container_name: redis
+    restart: always
+    image: redis:latest
+    expose:
+      - "6379"
+    networks:
+      - db_network
 
   mongodb:
     container_name: mongodb
@@ -50,6 +74,8 @@ services:
 
 volumes:
   mongo-volume:
+  media-volume:
+  code-volume:
 
 networks:
   web_network:
