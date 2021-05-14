@@ -15,7 +15,7 @@ services:
     networks:
       - web_network
       - db_network
-    command: gunicorn -w 4 -k gthread -b 0.0.0.0:8000 shiristory.wsgi
+    command: bash -c "python manage.py migrate && gunicorn -w 4 -k gthread -b 0.0.0.0:8000 shiristory.wsgi"
 
   shiristory_ws:
     container_name: shiristory_ws
@@ -23,7 +23,7 @@ services:
     build: .
     depends_on:
       - shiristory
-    command: daphne -b 0.0.0.0 -p 7999 shiristory.asgi:application
+    command: bash -c "python manage.py migrate && daphne -b 0.0.0.0 -p 7999 shiristory.asgi:application"
     expose:
       - "7999"
     volumes:
