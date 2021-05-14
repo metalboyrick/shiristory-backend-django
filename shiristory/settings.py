@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    # 'django.contrib.staticfiles',
+    'django.contrib.staticfiles',
     'shiristory',
     'shiristory.user_service.apps.UserServiceConfig',
     'shiristory.story_service.apps.StoryServiceConfig',
