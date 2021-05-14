@@ -1,0 +1,58 @@
+version: '3'
+
+services:
+  shiristory:
+    container_name: shiristory
+    restart: always
+    build: ./shiristory
+    depends_on:
+      - mongodb
+    expose:
+      - "8000"
+      - "520"
+    volumes:
+      - ./shiristory:/course/code/
+    networks:
+      - web_network
+      - db_network
+     command: bash -c "gunicorn shiristory.wsgi"
+
+  nginx:
+    container_name: nginx
+    restart: always
+    build: ./nginx
+    ports:
+      - "7999:7999"
+      - "8000:8000"
+    depends_on:
+      - shiristory
+    volumes:
+      - ./media:/course/code/media
+    networks:
+      - web_network
+
+  mongodb:
+    container_name: mongodb
+    restart: always
+    image: mongo
+    ports:
+      - "27017:27017"
+    env_file:
+      - .env
+      environment:
+        MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+        MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+        MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
+    volumes:
+      - mongo-volume:/data/db
+    networks:
+      - db_network
+
+volumes:
+  mongo-volume:
+
+networks:
+  web_network:
+    driver: bridge
+  db_network:
+    driver: bridge
