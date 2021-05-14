@@ -58,15 +58,15 @@ services:
   mongodb:
     container_name: mongodb
     restart: always
-    image: mongo
+    build: ./mongodb
     ports:
       - "27017:27017"
     env_file:
       - .env
-      environment:
-        MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
-        MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
-        MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
     volumes:
       - mongo-volume:/data/db
     networks:

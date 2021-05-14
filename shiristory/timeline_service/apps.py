@@ -2,4 +2,4 @@ from django.apps import AppConfig
 
 
 class TimelineServiceConfig(AppConfig):
-    name = 'timeline_service'
+    name = 'shiristory.timeline_service'

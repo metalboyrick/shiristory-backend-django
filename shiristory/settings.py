@@ -11,19 +11,15 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
 import os
-import environ
 
-env = environ.Env(
-    # set casting, default value
-    DEBUG=(bool, False)
-)
-# reading .env file
-environ.Env.read_env()
-
-DEBUG = env('DEBUG')
+from environ import Env
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# reading .env file
+env = Env()
+env.read_env(env_file=BASE_DIR+"/.env")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
@@ -45,9 +41,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     # 'django.contrib.staticfiles',
-    'shiristory-backend-django.shiristory.user_service.apps.UserServiceConfig',
-    'shiristory-backend-django.shiristory.story_service.apps.StoryServiceConfig',
-    'shiristory-backend-django.shiristory.timeline_service.apps.TimelineServiceConfig',
+    'shiristory',
+    'shiristory.user_service.apps.UserServiceConfig',
+    'shiristory.story_service.apps.StoryServiceConfig',
+    'shiristory.timeline_service.apps.TimelineServiceConfig',
 ]
 
 MIDDLEWARE = [
@@ -66,7 +63,7 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [],
-        'APP_DIRS': env("MONGODB_HOST"),
+        'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
@@ -86,15 +83,14 @@ WSGI_APPLICATION = 'shiristory.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'djongo',
-        'NAME': env("MONGODB_NAME"),
+        'NAME': env("MONGO_INITDB_DATABASE"),
         'ENFORCE_SCHEMA': False,
         'CLIENT': {
-            'host': env("MONGODB_HOST"),
-            'port': env("MONGODB_PORT"),
-            'username': env("MONGODB_USERNAME"),
-            'password': env("MONGODB_PASSWORD"),
-            'authSource': env("MONGODB_NAME"),
-            'authMechanism': 'SCRAM-SHA-1'
+            'host': env("MONGO_HOST"),
+            'port': env.int("MONGO_PORT"),
+            'username': env("MONGO_INITDB_NON_ROOT_USERNAME"),
+            'password': env("MONGO_INITDB_NON_ROOT_PASSWORD"),
+            'authSource': env("MONGO_AUTHENTICATION_DATABASE")
         },
         'LOGGING': {
             'version': 1,
