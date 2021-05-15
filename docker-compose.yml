@@ -52,8 +52,8 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
-      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
     volumes:
+      - ./mongodb/:/docker-entrypoint-initdb.d/
       - mongo-volume:/data/db
     networks:
       - db_network

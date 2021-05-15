@@ -83,13 +83,13 @@ WSGI_APPLICATION = 'shiristory.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'djongo',
-        'NAME': env("MONGO_INITDB_DATABASE"),
+        'NAME': env("MONGO_AUTHENTICATION_DATABASE"),
         'ENFORCE_SCHEMA': False,
         'CLIENT': {
             'host': env("MONGO_HOST"),
             'port': env.int("MONGO_PORT"),
-            'username': env("MONGO_INITDB_NON_ROOT_USERNAME"),
-            'password': env("MONGO_INITDB_NON_ROOT_PASSWORD"),
+            'username': env("MONGO_NON_ROOT_USERNAME"),
+            'password': env("MONGO_NON_ROOT_PASSWORD"),
             'authSource': env("MONGO_AUTHENTICATION_DATABASE")
         },
         'LOGGING': {
