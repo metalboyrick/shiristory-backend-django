@@ -1,5 +1,11 @@
+import datetime
+
+from django.views.decorators.csrf import csrf_exempt
 from bson import ObjectId
 from django.http import HttpResponse, JsonResponse
+from django.core.exceptions import *
+import json
+
 
 from shiristory.story_service.models import Group
 
@@ -27,6 +33,61 @@ def get_group_info(request, group_id):
             res_data['vote_threshold'] = query_res.vote_threshold
         except Exception as e:
             res_data, res_status = get_error_msg("group not found", 404)
+
+    else:
+        res_data, res_status = get_error_msg('invalid request', 400)
+
+    return JsonResponse(res_data, status=res_status)
+
+
+@csrf_exempt
+def edit_group_info(request, group_id):
+    res_data = {}
+    res_status = 200
+
+    if request.method == 'PATCH':
+        try:
+            query_res = Group.objects.get(pk=ObjectId(group_id))
+
+            if not query_res:
+                raise ObjectDoesNotExist()
+
+            req_body_json = json.loads(request.body)
+
+            # check for all the params
+            if len(req_body_json['group_name']) == 0:
+                raise Exception("Group name cannot be empty")
+
+            if not set(req_body_json['group_admins']).issubset(req_body_json['group_members']):
+                raise Exception("Admin should be a member")
+
+            if req_body_json['vote_threshold'] > len(req_body_json['group_members']):
+                raise Exception("Vote threshold cannot exceed group member amount")
+
+            query_res.group_name = req_body_json['group_name']
+            query_res.group_members = req_body_json['group_members']
+            query_res.group_admins = req_body_json['group_admins']
+            query_res.status = req_body_json['status']
+            query_res.vote_duration = datetime.timedelta(seconds=req_body_json['vote_duration'])
+            query_res.vote_threshold = req_body_json['vote_threshold']
+
+            query_res.save()
+
+            res_data['group_name'] = req_body_json['group_name']
+            res_data['group_members'] = req_body_json['group_members']
+            res_data['group_admins'] = req_body_json['group_admins']
+            res_data['status'] = req_body_json['status']
+            res_data['vote_duration'] = req_body_json['vote_duration']
+            res_data['vote_threshold'] = req_body_json['vote_threshold']
+
+        except KeyError as e:
+            res_data, res_status = get_error_msg(f"invalid input: {e} is missing", 400)
+        
+        except ObjectDoesNotExist as e:
+            res_data, res_status = get_error_msg(f"{e}", 404)
+
+        except Exception as e:
+            res_data, res_status = get_error_msg(f"{e}", 400)
 
     else:
         res_data, res_status = get_error_msg('invalid request', 400)
