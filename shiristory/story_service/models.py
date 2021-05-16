@@ -43,7 +43,7 @@ class Group(models.Model):
 
     @staticmethod
     def default_array():
-        return [1, 2, 3]
+        return []
 
     # choices for story status
     class StoryStatus(models.IntegerChoices):
