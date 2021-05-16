@@ -34,7 +34,8 @@ class VotePool(models.Model):
 
     candidates = models.ArrayField(
         model_container=StoryObject,
-        model_form_class=StoryObjectForm
+        model_form_class=StoryObjectForm,
+        blank=True
     )
 
 
@@ -42,7 +43,7 @@ class Group(models.Model):
 
     @staticmethod
     def default_array():
-        return []
+        return [1, 2, 3]
 
     # choices for story status
     class StoryStatus(models.IntegerChoices):
@@ -60,7 +61,8 @@ class Group(models.Model):
 
     stories = models.ArrayField(
         model_container=StoryObject,
-        model_form_class=StoryObjectForm
+        model_form_class=StoryObjectForm,
+        blank=True
     )
 
     vote_pool = models.EmbeddedField(
