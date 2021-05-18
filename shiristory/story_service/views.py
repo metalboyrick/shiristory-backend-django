@@ -154,5 +154,62 @@ def edit_member(request, group_id):
 
 @csrf_exempt
 def edit_admin(request, group_id):
-    print(group_id)
-    return JsonResponse({'message': 'Request to edit_admin'}, status=200)
+    res_data = {}
+    res_status = 200
+
+    try:
+        if request.method == 'POST':
+
+            query_res = Group.objects.get(pk=ObjectId(group_id))
+
+            if not query_res:
+                raise ObjectDoesNotExist()
+
+            req_body_json = json.loads(request.body)
+
+            if not req_body_json['member_id']:
+                raise KeyError('member_id')
+
+            if req_body_json['member_id'] not in query_res.group_members:
+                raise Exception("member is not part of this group!")
+
+            if req_body_json['member_id'] in query_res.group_admins:
+                raise Exception("admin already present!")
+
+            query_res.group_admins.append(req_body_json['member_id'])
+            query_res.save()
+
+            res_data, res_status = get_msg(f"admin add ok", 200)
+
+        elif request.method == 'DELETE':
+            query_res = Group.objects.get(pk=ObjectId(group_id))
+
+            if not query_res:
+                raise ObjectDoesNotExist()
+
+            req_body_json = json.loads(request.body)
+
+            if not req_body_json['member_id']:
+                raise KeyError('member_id')
+
+            if req_body_json['member_id'] not in query_res.group_admins:
+                raise Exception(f"member {req_body_json['member_id']} is not admin!")
+
+            query_res.group_admins.remove(req_body_json['member_id'])
+            query_res.save()
+
+            res_data, res_status = get_msg(f"admin delete ok", 200)
+
+        else:
+            res_data, res_status = get_msg('invalid request', 400)
+
+    except KeyError as e:
+        res_data, res_status = get_msg(f"invalid input: {e} is missing", 400)
+
+    except ObjectDoesNotExist as e:
+        res_data, res_status = get_msg(f"group not found", 404)
+
+    except Exception as e:
+        res_data, res_status = get_msg(f"{e}", 400)
+
+    return JsonResponse(res_data, status=res_status)
