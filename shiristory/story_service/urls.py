@@ -8,4 +8,5 @@ urlpatterns = [
 
     # Admin activities
     path('<str:group_id>/admin/info', views.edit_group_info, name='Edit Group Info')
+
 ]
