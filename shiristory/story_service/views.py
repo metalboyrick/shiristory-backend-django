@@ -93,8 +93,9 @@ def edit_member(request, group_id):
     res_data = {}
     res_status = 200
 
-    if request.method == 'POST':
-        try:
+    try:
+        if request.method == 'POST':
+
             query_res = Group.objects.get(pk=ObjectId(group_id))
 
             if not query_res:
@@ -107,25 +108,43 @@ def edit_member(request, group_id):
 
             if req_body_json['member_id'] in query_res.group_members:
                 raise Exception("member already present!")
-            
+
             query_res.group_members.append(req_body_json['member_id'])
             query_res.save()
 
             res_data, res_status = get_msg(f"member add ok", 200)
-            
-        except KeyError as e:
-            res_data, res_status = get_msg(f"invalid input: {e} is missing", 400)
 
-        except ObjectDoesNotExist as e:
-            res_data, res_status = get_msg(f"{e}", 404)
+        elif request.method == 'DELETE':
+            query_res = Group.objects.get(pk=ObjectId(group_id))
 
-        except Exception as e:
-            res_data, res_status = get_msg(f"{e}", 400)
+            if not query_res:
+                raise ObjectDoesNotExist()
 
-    elif request.method == 'DELETE':
-        pass
-    else:
-        res_data, res_status = get_msg('invalid request', 400)
+            req_body_json = json.loads(request.body)
+
+            if not req_body_json['member_id']:
+                raise KeyError('member_id')
+
+            if req_body_json['member_id'] not in query_res.group_members:
+                raise Exception("member is not in group!")
+
+            query_res.group_members.remove(req_body_json['member_id'])
+            query_res.save()
+
+            res_data, res_status = get_msg(f"member delete ok", 200)
+
+        else:
+            res_data, res_status = get_msg('invalid request', 400)
+
+    except KeyError as e:
+        res_data, res_status = get_msg(f"invalid input: {e} is missing", 400)
+
+    except ObjectDoesNotExist as e:
+        res_data, res_status = get_msg(f"group not found", 404)
+
+    except Exception as e:
+        res_data, res_status = get_msg(f"{e}", 400)
+
 
     return JsonResponse(res_data, status=res_status)
 
