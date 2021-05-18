@@ -86,3 +86,13 @@ def edit_group_info(request, group_id):
         res_data, res_status = get_error_msg('invalid request', 400)
 
     return JsonResponse(res_data, status=res_status)
+
+@csrf_exempt
+def edit_member(request, group_id):
+    print(group_id)
+    return JsonResponse({'message': 'Request to edit_member'}, status=200)
+
+@csrf_exempt
+def edit_admin(request, group_id):
+    print(group_id)
+    return JsonResponse({'message': 'Request to edit_admin'}, status=200)
