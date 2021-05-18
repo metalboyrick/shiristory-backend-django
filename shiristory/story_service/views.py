@@ -10,7 +10,7 @@ import json
 from shiristory.story_service.models import Group
 
 
-def get_error_msg(message, status):
+def get_msg(message, status):
     return {'message': f'{status} {message}'}, status
 
 
@@ -32,10 +32,10 @@ def get_group_info(request, group_id):
             res_data['vote_duration'] = query_res.vote_duration
             res_data['vote_threshold'] = query_res.vote_threshold
         except Exception as e:
-            res_data, res_status = get_error_msg("group not found", 404)
+            res_data, res_status = get_msg("group not found", 404)
 
     else:
-        res_data, res_status = get_error_msg('invalid request', 400)
+        res_data, res_status = get_msg('invalid request', 400)
 
     return JsonResponse(res_data, status=res_status)
 
@@ -74,23 +74,60 @@ def edit_group_info(request, group_id):
             res_data['vote_threshold'] = req_body_json['vote_threshold']
 
         except KeyError as e:
-            res_data, res_status = get_error_msg(f"invalid input: {e} is missing", 400)
+            res_data, res_status = get_msg(f"invalid input: {e} is missing", 400)
         
         except ObjectDoesNotExist as e:
-            res_data, res_status = get_error_msg(f"{e}", 404)
+            res_data, res_status = get_msg(f"{e}", 404)
 
         except Exception as e:
-            res_data, res_status = get_error_msg(f"{e}", 400)
+            res_data, res_status = get_msg(f"{e}", 400)
 
     else:
-        res_data, res_status = get_error_msg('invalid request', 400)
+        res_data, res_status = get_msg('invalid request', 400)
 
     return JsonResponse(res_data, status=res_status)
 
 @csrf_exempt
 def edit_member(request, group_id):
-    print(group_id)
-    return JsonResponse({'message': 'Request to edit_member'}, status=200)
+
+    res_data = {}
+    res_status = 200
+
+    if request.method == 'POST':
+        try:
+            query_res = Group.objects.get(pk=ObjectId(group_id))
+
+            if not query_res:
+                raise ObjectDoesNotExist()
+
+            req_body_json = json.loads(request.body)
+
+            if not req_body_json['member_id']:
+                raise KeyError('member_id')
+
+            if req_body_json['member_id'] in query_res.group_members:
+                raise Exception("member already present!")
+            
+            query_res.group_members.append(req_body_json['member_id'])
+            query_res.save()
+
+            res_data, res_status = get_msg(f"member add ok", 200)
+            
+        except KeyError as e:
+            res_data, res_status = get_msg(f"invalid input: {e} is missing", 400)
+
+        except ObjectDoesNotExist as e:
+            res_data, res_status = get_msg(f"{e}", 404)
+
+        except Exception as e:
+            res_data, res_status = get_msg(f"{e}", 400)
+
+    elif request.method == 'DELETE':
+        pass
+    else:
+        res_data, res_status = get_msg('invalid request', 400)
+
+    return JsonResponse(res_data, status=res_status)
 
 @csrf_exempt
 def edit_admin(request, group_id):
