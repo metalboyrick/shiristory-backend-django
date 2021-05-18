@@ -129,6 +129,10 @@ def edit_member(request, group_id):
                 raise Exception("member is not in group!")
 
             query_res.group_members.remove(req_body_json['member_id'])
+
+            if req_body_json['member_id'] in query_res.group_admins:
+                query_res.group_admins.remove(req_body_json['member_id'])
+
             query_res.save()
 
             res_data, res_status = get_msg(f"member delete ok", 200)
