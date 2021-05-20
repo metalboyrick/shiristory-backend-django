@@ -25,6 +25,9 @@ class Post(models.Model):
     updated_at = models.DateTimeField(auto_now=True, blank=True)
 
     # likes = models.ArrayReferenceField()
-    comments = models.EmbeddedField(model_container=Comment)
+    comments = models.ArrayField(model_container=Comment)
 
     objects = models.DjongoManager()
+
+    def get_id(self):
+        return str(self.pk)

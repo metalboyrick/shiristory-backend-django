@@ -35,7 +35,7 @@ DEBUG = env.bool('APP_DEBUG', False)
 
 APP_URL = env('APP_URL')
 
-APP_PORT = env.int('APP_PORT')
+APP_PORT = env.int('APP_PORT', 80)
 APP_WS_PORT = env.int('APP_WS_PORT')
 
 ALLOWED_HOSTS = []

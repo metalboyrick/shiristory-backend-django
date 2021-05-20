@@ -41,6 +41,8 @@ def save_uploaded_images(request, upload_to):
     k_media_root = settings.MEDIA_ROOT
     # http://website.com
     k_app_url = settings.APP_URL
+    # 80
+    k_app_port = settings.APP_PORT
 
     result = []
 
@@ -59,7 +61,7 @@ def save_uploaded_images(request, upload_to):
             image.save(save_file_path)
 
             # Image url for database
-            file_abs_url = k_app_url + k_media_url + f'{upload_to}/' + save_file_name
+            file_abs_url = f'{k_app_url}:{k_app_port}{k_media_url}{upload_to}/{save_file_name}'
 
             result.append(file_abs_url)
 
@@ -67,7 +69,7 @@ def save_uploaded_images(request, upload_to):
 
     except (ValueError, OSError) as error:
         print(f'Save Image Error: {error}')
-        return None
+        raise Exception(f'Save Image Error: {error}')
 
 
 # file_path example:
