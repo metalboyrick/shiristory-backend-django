@@ -45,11 +45,6 @@ def create_group(request):
             request_body = request.body
             req_body_json = json.loads(request.body)
 
-            # check if the group already exists
-            existing_groups = Group.objects.filter(group_name=req_body_json['group_name'])
-            if existing_groups.exists():
-                raise Exception("Group already exists!")
-
             # TODO: set the admin to the user who sent this request
 
             new_id = ObjectId()
