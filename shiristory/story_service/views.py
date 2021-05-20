@@ -31,7 +31,7 @@ def get_group_list(request):
             })
 
     else:
-        res_data, res_status = get_msg('invalid request', 400)
+        res_data, res_status = get_msg('invalid request method', 405)
 
     return JsonResponse(res_data, status=res_status, safe=False)
 
@@ -45,15 +45,6 @@ def create_group(request):
         req_body_json = json.loads(request.body)
 
         # TODO: set the admin to the user who sent this request
-        # new_story = {
-        #     'story_id' : ObjectId(),
-        #     'user_id' : req_body_json['group_admins'][0],
-        #     'story_type': req_body_json['first_story']['story_type'],
-        #     'story_content': req_body_json['first_story']['story_content'],
-        #     'next_story_type': req_body_json['first_story']['next_story_type'],
-        #     'datetime': datetime.datetime.now(),
-        #     'vote_count': 0
-        # }
 
         new_id = ObjectId()
 
@@ -81,7 +72,7 @@ def create_group(request):
             'group_id': str(new_id)
         }
     else:
-        res_data, res_status = get_msg('invalid request', 400)
+        res_data, res_status = get_msg('invalid request method', 405)
 
     return JsonResponse(res_data, status=res_status)
 
@@ -102,7 +93,7 @@ def get_group_info(request, group_id):
             res_data, res_status = get_msg("group not found", 404)
 
     else:
-        res_data, res_status = get_msg('invalid request', 400)
+        res_data, res_status = get_msg('invalid request method', 405)
 
     return JsonResponse(res_data, status=res_status)
 
@@ -150,7 +141,7 @@ def edit_group_info(request, group_id):
             res_data, res_status = get_msg(f"{e}", 400)
 
     else:
-        res_data, res_status = get_msg('invalid request', 400)
+        res_data, res_status = get_msg('invalid request method', 405)
 
     return JsonResponse(res_data, status=res_status)
 
@@ -205,7 +196,7 @@ def edit_member(request, group_id):
             res_data, res_status = get_msg(f"member delete ok", 200)
 
         else:
-            res_data, res_status = get_msg('invalid request', 400)
+            res_data, res_status = get_msg('invalid request method', 405)
 
     except KeyError as e:
         res_data, res_status = get_msg(f"invalid input: {e} is missing", 400)
@@ -268,7 +259,7 @@ def edit_admin(request, group_id):
             res_data, res_status = get_msg(f"admin delete ok", 200)
 
         else:
-            res_data, res_status = get_msg('invalid request', 400)
+            res_data, res_status = get_msg('invalid request method', 405)
 
     except KeyError as e:
         res_data, res_status = get_msg(f"invalid input: {e} is missing", 400)
