@@ -7,13 +7,14 @@ from django.core.exceptions import *
 import json
 
 
-from shiristory.story_service.models import Group
+from shiristory.story_service.models import Group, StoryObject
 
 
 def get_msg(message, status):
     return {'message': f'{status} {message}'}, status
 
 # for now not specific to user
+# TODO: pagination
 def get_group_list(request):
     res_data = {}
     res_status = 200
@@ -34,6 +35,55 @@ def get_group_list(request):
 
     return JsonResponse(res_data, status=res_status, safe=False)
 
+@csrf_exempt
+def create_group(request):
+    res_data = {}
+    res_status = 200
+
+    if request.method == 'POST':
+        request_body = request.body
+        req_body_json = json.loads(request.body)
+
+        # TODO: set the admin to the user who sent this request
+        # new_story = {
+        #     'story_id' : ObjectId(),
+        #     'user_id' : req_body_json['group_admins'][0],
+        #     'story_type': req_body_json['first_story']['story_type'],
+        #     'story_content': req_body_json['first_story']['story_content'],
+        #     'next_story_type': req_body_json['first_story']['next_story_type'],
+        #     'datetime': datetime.datetime.now(),
+        #     'vote_count': 0
+        # }
+
+        new_id = ObjectId()
+
+        new_group = Group(
+            group_id=new_id,
+            group_name=req_body_json['group_name'],
+            group_members=req_body_json['group_members'],
+            group_admins=req_body_json['group_admins'],
+            vote_duration=datetime.timedelta(seconds=req_body_json['vote_duration']),
+            vote_threshold=req_body_json['vote_threshold'],
+            stories=[ {
+                'story_id' : ObjectId(),
+                'user_id' : req_body_json['group_admins'][0],
+                'story_type': req_body_json['first_story']['story_type'],
+                'story_content': req_body_json['first_story']['story_content'],
+                'next_story_type': req_body_json['first_story']['next_story_type'],
+                'datetime': datetime.datetime.now(),
+                'vote_count': 0
+            } ]
+        )
+
+        new_group.save()
+
+        res_data = {
+            'group_id': str(new_id)
+        }
+    else:
+        res_data, res_status = get_msg('invalid request', 400)
+
+    return JsonResponse(res_data, status=res_status)
 
 def get_group_info(request, group_id):
     res_data = {}

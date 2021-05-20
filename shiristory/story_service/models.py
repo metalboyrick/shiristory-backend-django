@@ -1,3 +1,4 @@
+import datetime
 from django import forms
 from djongo import models
 
@@ -15,7 +16,7 @@ class StoryObject(models.Model):
     story_type = models.IntegerField(choices=StoryType.choices, blank=False)
     story_content = models.CharField(max_length=255, blank=False)
     next_story_type = models.IntegerField(choices=StoryType.choices, blank=False)
-    datetime = models.DateTimeField(blank=False)
+    datetime = models.DateTimeField(default=datetime.datetime.now())
     vote_count = models.IntegerField(default=0, blank=False)
 
 
@@ -23,7 +24,7 @@ class StoryObjectForm(forms.ModelForm):
     class Meta:
         model = StoryObject
         fields = (
-            'story_id', 'user_id', 'story_type', 'story_content', 'next_story_type', 'datetime', 'vote_count'
+            'story_id', 'user_id', 'story_type', 'story_content', 'next_story_type', 'vote_count'
         )
 
 
@@ -54,7 +55,7 @@ class Group(models.Model):
     group_name = models.CharField(max_length=255, blank=False)
     group_members = models.JSONField(default=default_array, blank=False)
     group_admins = models.JSONField(default=default_array, blank=False)
-    date_created = models.DateTimeField()
+    date_created = models.DateTimeField(default=datetime.datetime.now())
     status = models.IntegerField(choices=StoryStatus.choices, blank=False)
     vote_duration = models.DurationField()
     vote_threshold = models.IntegerField()
