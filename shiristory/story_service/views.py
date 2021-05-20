@@ -1,11 +1,11 @@
 import datetime
-
-from django.views.decorators.csrf import csrf_exempt
-from bson import ObjectId
-from django.http import HttpResponse, JsonResponse
-from django.core.exceptions import *
 import json
 
+from bson import ObjectId
+from django.views.decorators.csrf import csrf_exempt
+from django.http import HttpResponse, JsonResponse
+from django.core.exceptions import *
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from shiristory.story_service.models import Group, StoryObject
 
@@ -20,12 +20,35 @@ def get_group_list(request):
     res_status = 200
 
     if request.method == 'GET':
-        res_data = []
 
-        groups_query = Group.objects.all()
+        current_page = request.GET.get('page', 1)
+        page_size = request.GET.get('size', 3)
 
-        for group_item in groups_query:
-            res_data.append({
+        groups_query = Group.objects.all().order_by('-last_modified')
+        paginator = Paginator(groups_query, page_size)
+
+        url = request.build_absolute_uri("/story")
+
+        try:
+            page_result = paginator.page(current_page)
+        except (PageNotAnInteger, EmptyPage) as exp:
+            page_result = paginator.page(paginator.num_pages)
+
+        res_data['page'] = current_page
+
+        res_data['page_size'] = paginator.per_page
+
+        res_data['total_pages'] = paginator.num_pages
+
+        res_data['next'] = f'{url}?page={page_result.next_page_number()}&size={page_size}' if page_result.has_next() else None
+        res_data['previous'] = f'{url}?page={page_result.previous_page_number()}&size={page_size}' if page_result.has_previous() else None
+
+        res_data['groups'] = []
+
+        group_list = list(page_result.object_list)
+
+        for group_item in group_list:
+            res_data['groups'].append({
                 'group_id': str(group_item.group_id),
                 'group_name': group_item.group_name
             })

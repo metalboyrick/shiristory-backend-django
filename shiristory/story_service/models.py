@@ -56,6 +56,7 @@ class Group(models.Model):
     group_members = models.JSONField(default=default_array, blank=False)
     group_admins = models.JSONField(default=default_array, blank=False)
     date_created = models.DateTimeField(default=datetime.datetime.now())
+    last_modified = models.DateTimeField(auto_now=True)
     status = models.IntegerField(choices=StoryStatus.choices, blank=False)
     vote_duration = models.DurationField()
     vote_threshold = models.IntegerField()
