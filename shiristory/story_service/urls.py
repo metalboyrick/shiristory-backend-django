@@ -13,5 +13,4 @@ urlpatterns = [
     path('<str:group_id>/admin/info/', views.edit_group_info, name='Edit Group Info'),
     path('<str:group_id>/admin/member/', views.edit_member, name='Edit members')
 
-
 ]

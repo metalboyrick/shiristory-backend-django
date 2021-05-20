@@ -2,16 +2,17 @@ import datetime
 import json
 
 from bson import ObjectId
-from django.views.decorators.csrf import csrf_exempt
-from django.http import HttpResponse, JsonResponse
 from django.core.exceptions import *
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 
-from shiristory.story_service.models import Group, StoryObject
+from shiristory.story_service.models import Group
 
 
 def get_msg(message, status):
     return {'message': f'{status} {message}'}, status
+
 
 # for now not specific to user
 # TODO: pagination
@@ -54,6 +55,7 @@ def get_group_list(request):
 
     return JsonResponse(res_data, status=res_status, safe=False)
 
+
 @csrf_exempt
 def create_group(request):
     res_data = {}
@@ -75,15 +77,15 @@ def create_group(request):
                 group_admins=req_body_json['group_admins'],
                 vote_duration=datetime.timedelta(seconds=req_body_json['vote_duration']),
                 vote_threshold=req_body_json['vote_threshold'],
-                stories=[ {
-                    'story_id' : ObjectId(),
-                    'user_id' : req_body_json['group_admins'][0],
+                stories=[{
+                    'story_id': ObjectId(),
+                    'user_id': req_body_json['group_admins'][0],
                     'story_type': req_body_json['first_story']['story_type'],
                     'story_content': req_body_json['first_story']['story_content'],
                     'next_story_type': req_body_json['first_story']['next_story_type'],
                     'datetime': datetime.datetime.now(),
                     'vote_count': 0
-                } ]
+                }]
             )
 
             new_group.save()
@@ -101,6 +103,7 @@ def create_group(request):
         res_data, res_status = get_msg('invalid request method', 405)
 
     return JsonResponse(res_data, status=res_status)
+
 
 def get_group_info(request, group_id):
     res_data = {}
@@ -122,6 +125,7 @@ def get_group_info(request, group_id):
         res_data, res_status = get_msg('invalid request method', 405)
 
     return JsonResponse(res_data, status=res_status)
+
 
 # TODO: pagination
 def get_stories(request, group_id):
@@ -148,22 +152,20 @@ def get_stories(request, group_id):
             res_data['page'] = current_page
             res_data['page_size'] = paginator.per_page
             res_data['total_pages'] = paginator.num_pages
-            res_data[
-                'next'] = f'{url}?page={page_result.next_page_number()}&size={page_size}' if page_result.has_next() else None
-            res_data[
-                'previous'] = f'{url}?page={page_result.previous_page_number()}&size={page_size}' if page_result.has_previous() else None
+            res_data['next'] = f'{url}?page={page_result.next_page_number()}&size={page_size}' if page_result.has_next() else None
+            res_data['previous'] = f'{url}?page={page_result.previous_page_number()}&size={page_size}' if page_result.has_previous() else None
             res_data['stories'] = []
 
             for entry in list(page_result.object_list):
                 res_data['stories'].append(
-                  {
-                    'story_id' : str(entry['story_id']),
-                    'user_id' : entry['user_id'],
-                    'story_type': entry['story_type'],
-                    'story_content': entry['story_content'],
-                    'next_story_type': entry['next_story_type'],
-                    'datetime': entry['datetime'],
-                    'vote_count': entry['vote_count']
+                    {
+                        'story_id': str(entry['story_id']),
+                        'user_id': entry['user_id'],
+                        'story_type': entry['story_type'],
+                        'story_content': entry['story_content'],
+                        'next_story_type': entry['next_story_type'],
+                        'datetime': entry['datetime'],
+                        'vote_count': entry['vote_count']
                     }
                 )
 
@@ -172,7 +174,6 @@ def get_stories(request, group_id):
 
     else:
         res_data, res_status = get_msg('invalid request method', 405)
-
 
     return JsonResponse(res_data, status=res_status, safe=False)
 
@@ -212,7 +213,7 @@ def edit_group_info(request, group_id):
 
         except KeyError as e:
             res_data, res_status = get_msg(f"invalid input: {e} is missing", 400)
-        
+
         except ObjectDoesNotExist as e:
             res_data, res_status = get_msg(f"{e}", 404)
 
@@ -224,9 +225,9 @@ def edit_group_info(request, group_id):
 
     return JsonResponse(res_data, status=res_status)
 
+
 @csrf_exempt
 def edit_member(request, group_id):
-
     res_data = {}
     res_status = 200
 
@@ -286,8 +287,8 @@ def edit_member(request, group_id):
     except Exception as e:
         res_data, res_status = get_msg(f"{e}", 400)
 
-
     return JsonResponse(res_data, status=res_status)
+
 
 @csrf_exempt
 def edit_admin(request, group_id):
@@ -350,5 +351,3 @@ def edit_admin(request, group_id):
         res_data, res_status = get_msg(f"{e}", 400)
 
     return JsonResponse(res_data, status=res_status)
-
-
