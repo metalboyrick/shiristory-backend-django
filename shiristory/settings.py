@@ -25,10 +25,18 @@ env.read_env(env_file=BASE_DIR+"/.env")
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '*gexq__!+$m&e(oe@xm7flgcvqm4uom6j#1s&4thp))zjs=0py'
+SECRET_KEY = env('APP_SECRET_KEY')
+
+# local for dev, prod for production
+APP_ENV = env('APP_ENV')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env.bool('APP_DEBUG', False)
+
+APP_URL = env('APP_URL')
+
+APP_PORT = env.int('APP_PORT')
+APP_WS_PORT = env.int('APP_WS_PORT')
 
 ALLOWED_HOSTS = []
 
@@ -139,3 +147,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
+
+# Media files
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
