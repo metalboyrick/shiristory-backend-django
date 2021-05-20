@@ -125,15 +125,37 @@ def get_group_info(request, group_id):
 
 # TODO: pagination
 def get_stories(request, group_id):
-    res_data = []
+    res_data = {}
     res_status = 200
 
     if request.method == 'GET':
         try:
+
+            current_page = request.GET.get('page', 1)
+            page_size = request.GET.get('size', 3)
+
             query_res = Group.objects.get(pk=ObjectId(group_id))
 
-            for entry in query_res.stories:
-                res_data.append(
+            paginator = Paginator(query_res.stories, page_size)
+
+            url = request.build_absolute_uri(f"/{group_id}/stories")
+
+            try:
+                page_result = paginator.page(current_page)
+            except (PageNotAnInteger, EmptyPage) as exp:
+                page_result = paginator.page(paginator.num_pages)
+
+            res_data['page'] = current_page
+            res_data['page_size'] = paginator.per_page
+            res_data['total_pages'] = paginator.num_pages
+            res_data[
+                'next'] = f'{url}?page={page_result.next_page_number()}&size={page_size}' if page_result.has_next() else None
+            res_data[
+                'previous'] = f'{url}?page={page_result.previous_page_number()}&size={page_size}' if page_result.has_previous() else None
+            res_data['stories'] = []
+
+            for entry in list(page_result.object_list):
+                res_data['stories'].append(
                   {
                     'story_id' : str(entry['story_id']),
                     'user_id' : entry['user_id'],
