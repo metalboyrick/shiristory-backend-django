@@ -1,5 +1,7 @@
 # Create your views here.
-from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
+from django.forms.models import model_to_dict
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.http import HttpResponseBadRequest, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
 from shiristory.base.toolkits import save_uploaded_medias
@@ -7,7 +9,49 @@ from shiristory.timeline_service.models import Post
 
 
 def index(request):
-    return HttpResponse("Hello, world. You're at the timeline index.")
+    if request.method != 'GET':
+        return HttpResponseBadRequest(status=405)
+
+    page = request.GET.get('page', 1)
+    page_size = request.GET.get('size', 10)
+
+    posts = Post.objects.all().order_by('-updated_at')
+    paginator = Paginator(posts, page_size, allow_empty_first_page=True)
+
+    try:
+        page_result = paginator.page(page)
+    except (PageNotAnInteger, EmptyPage) as exp:
+        page_result = paginator.page(paginator.num_pages)
+
+    post_data = []
+    post_list = list(page_result.object_list)
+    for post in post_list:
+        post_dict = model_to_dict(post)
+        post_dict['_id'] = post.get_id()
+        post_data.append(post_dict)
+
+    url = request.build_absolute_uri("/timeline/view")
+
+    next_page_url = None
+    if page_result.has_next():
+        next_page_url = f'{url}?page={page_result.next_page_number()}&size={page_size}'
+
+    previous_page_url = None
+    if page_result.has_previous():
+        previous_page_url = f'{url}?page={page_result.previous_page_number()}&size={page_size}'
+
+    response_data = {
+        'page': page,
+        'page_size': paginator.per_page,
+        'total_pages': paginator.num_pages,
+        'next': next_page_url,
+        'previous': previous_page_url,
+        'posts': post_data
+    }
+
+    print(page_result.object_list)
+
+    return JsonResponse(response_data)
 
 
 @csrf_exempt
