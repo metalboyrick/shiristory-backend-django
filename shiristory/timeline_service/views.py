@@ -1,10 +1,16 @@
 # Create your views here.
-from django.forms.models import model_to_dict
+import json
+from datetime import datetime
+
+from bson import ObjectId
+from bson.errors import InvalidId
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.http import HttpResponseBadRequest, JsonResponse
+from django.forms.models import model_to_dict
+from django.http import HttpResponseBadRequest, JsonResponse, HttpResponseNotFound
 from django.views.decorators.csrf import csrf_exempt
 
 from shiristory.base.toolkits import save_uploaded_medias
+from shiristory.settings import DATETIME_FORMAT
 from shiristory.timeline_service.models import Post
 
 
@@ -28,6 +34,7 @@ def index(request):
     for post in post_list:
         post_dict = model_to_dict(post)
         post_dict['_id'] = post.get_id()
+        post_dict['created_at'] = post.created_at.strftime(DATETIME_FORMAT)
         post_data.append(post_dict)
 
     url = request.build_absolute_uri("/timeline/view")
@@ -79,4 +86,41 @@ def create(request):
 
     post.save()
 
-    return JsonResponse({'post_id': post.get_id(), 'message': 'Create post ok.'})
+    return JsonResponse({'post_id': post.get_id(), 'message': 'Create post OK'})
+
+
+@csrf_exempt
+def add_comment(request, post_id):
+    if request.method != 'POST':
+        return HttpResponseBadRequest(status=405)
+
+    data = json.loads(request.body)
+
+    try:
+        comment = data['comment']
+    except KeyError:
+        return HttpResponseBadRequest('Comment must not be empty')
+
+    try:
+        object_id = ObjectId(post_id)
+        Post.objects.mongo_update_one(
+            {"_id": object_id},
+            {'$push':
+                {'comments': {
+                    'comment': comment,
+                    'author': 'admin',
+                    'created_at': datetime.now()}
+                }
+            }
+        )
+    except InvalidId as e:
+        return HttpResponseNotFound("post_id not found")
+
+    response = {
+        '_id': post_id,
+        # TODO: change date format
+        'comments': Post.objects.get(pk=object_id).comments,
+        'message': 'Add comment OK'
+    }
+
+    return JsonResponse(response)

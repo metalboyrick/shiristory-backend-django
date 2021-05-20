@@ -5,9 +5,12 @@ class Comment(models.Model):
     # TODO: Integrate with user
     author = models.CharField(max_length=255)
     comment = models.CharField(max_length=500)
-    created_at = models.DateTimeField(auto_now_add=True, blank=True)
+    created_at = models.DateTimeField()
 
     objects = models.DjongoManager()
+
+    def __str__(self):
+        return self.comment
 
     class Meta:
         abstract = True
