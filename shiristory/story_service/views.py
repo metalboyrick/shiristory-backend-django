@@ -35,14 +35,10 @@ def get_group_list(request):
             page_result = paginator.page(paginator.num_pages)
 
         res_data['page'] = current_page
-
         res_data['page_size'] = paginator.per_page
-
         res_data['total_pages'] = paginator.num_pages
-
         res_data['next'] = f'{url}?page={page_result.next_page_number()}&size={page_size}' if page_result.has_next() else None
         res_data['previous'] = f'{url}?page={page_result.previous_page_number()}&size={page_size}' if page_result.has_previous() else None
-
         res_data['groups'] = []
 
         group_list = list(page_result.object_list)
