@@ -13,9 +13,26 @@ from shiristory.story_service.models import Group
 def get_msg(message, status):
     return {'message': f'{status} {message}'}, status
 
+# for now not specific to user
+def get_group_list(request):
+    res_data = {}
+    res_status = 200
 
-def index(request):
-    return HttpResponse("Hello, world. You're at the story index.")
+    if request.method == 'GET':
+        res_data = []
+
+        groups_query = Group.objects.all()
+
+        for group_item in groups_query:
+            res_data.append({
+                'group_id': str(group_item.group_id),
+                'group_name': group_item.group_name
+            })
+
+    else:
+        res_data, res_status = get_msg('invalid request', 400)
+
+    return JsonResponse(res_data, status=res_status, safe=False)
 
 
 def get_group_info(request, group_id):
@@ -213,3 +230,5 @@ def edit_admin(request, group_id):
         res_data, res_status = get_msg(f"{e}", 400)
 
     return JsonResponse(res_data, status=res_status)
+
+
