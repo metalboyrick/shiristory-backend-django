@@ -41,36 +41,45 @@ def create_group(request):
     res_status = 200
 
     if request.method == 'POST':
-        request_body = request.body
-        req_body_json = json.loads(request.body)
+        try:
+            request_body = request.body
+            req_body_json = json.loads(request.body)
 
-        # TODO: set the admin to the user who sent this request
+            # check if the group already exists
+            existing_groups = Group.objects.filter(group_name=req_body_json['group_name'])
+            if existing_groups.exists():
+                raise Exception("Group already exists!")
 
-        new_id = ObjectId()
+            # TODO: set the admin to the user who sent this request
 
-        new_group = Group(
-            group_id=new_id,
-            group_name=req_body_json['group_name'],
-            group_members=req_body_json['group_members'],
-            group_admins=req_body_json['group_admins'],
-            vote_duration=datetime.timedelta(seconds=req_body_json['vote_duration']),
-            vote_threshold=req_body_json['vote_threshold'],
-            stories=[ {
-                'story_id' : ObjectId(),
-                'user_id' : req_body_json['group_admins'][0],
-                'story_type': req_body_json['first_story']['story_type'],
-                'story_content': req_body_json['first_story']['story_content'],
-                'next_story_type': req_body_json['first_story']['next_story_type'],
-                'datetime': datetime.datetime.now(),
-                'vote_count': 0
-            } ]
-        )
+            new_id = ObjectId()
 
-        new_group.save()
+            new_group = Group(
+                group_id=new_id,
+                group_name=req_body_json['group_name'],
+                group_members=req_body_json['group_members'],
+                group_admins=req_body_json['group_admins'],
+                vote_duration=datetime.timedelta(seconds=req_body_json['vote_duration']),
+                vote_threshold=req_body_json['vote_threshold'],
+                stories=[ {
+                    'story_id' : ObjectId(),
+                    'user_id' : req_body_json['group_admins'][0],
+                    'story_type': req_body_json['first_story']['story_type'],
+                    'story_content': req_body_json['first_story']['story_content'],
+                    'next_story_type': req_body_json['first_story']['next_story_type'],
+                    'datetime': datetime.datetime.now(),
+                    'vote_count': 0
+                } ]
+            )
 
-        res_data = {
-            'group_id': str(new_id)
-        }
+            new_group.save()
+
+            res_data = {
+                'group_id': str(new_id)
+            }
+
+        except Exception as e:
+            res_data, res_status = get_msg(f'{e}', 400)
     else:
         res_data, res_status = get_msg('invalid request method', 405)
 
