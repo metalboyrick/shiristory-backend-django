@@ -6,6 +6,7 @@ urlpatterns = [
     path('', views.get_group_list, name='Get group list'),
     path('create/', views.create_group, name='Create new group'),
     path('<str:group_id>/info/', views.get_group_info, name='Get Group Info'),
+    path('<str:group_id>/stories/', views.get_stories, name='Get stories'),
 
     # Admin activities
     path('<str:group_id>/admin/', views.edit_admin, name='Edit admins'),

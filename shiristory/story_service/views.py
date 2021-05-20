@@ -73,6 +73,9 @@ def create_group(request):
                 'group_id': str(new_id)
             }
 
+        except KeyError as e:
+            res_data, res_status = get_msg(f"invalid input: {e} is missing", 400)
+
         except Exception as e:
             res_data, res_status = get_msg(f'{e}', 400)
     else:
@@ -93,13 +96,44 @@ def get_group_info(request, group_id):
             res_data['status'] = query_res.status
             res_data['vote_duration'] = query_res.vote_duration
             res_data['vote_threshold'] = query_res.vote_threshold
-        except Exception as e:
+        except ObjectDoesNotExist as e:
             res_data, res_status = get_msg("group not found", 404)
 
     else:
         res_data, res_status = get_msg('invalid request method', 405)
 
     return JsonResponse(res_data, status=res_status)
+
+# TODO: pagination
+def get_stories(request, group_id):
+    res_data = []
+    res_status = 200
+
+    if request.method == 'GET':
+        try:
+            query_res = Group.objects.get(pk=ObjectId(group_id))
+
+            for entry in query_res.stories:
+                res_data.append(
+                  {
+                    'story_id' : str(entry['story_id']),
+                    'user_id' : entry['user_id'],
+                    'story_type': entry['story_type'],
+                    'story_content': entry['story_content'],
+                    'next_story_type': entry['next_story_type'],
+                    'datetime': entry['datetime'],
+                    'vote_count': entry['vote_count']
+                    }
+                )
+
+        except ObjectDoesNotExist as e:
+            res_data, res_status = get_msg("group not found", 404)
+
+    else:
+        res_data, res_status = get_msg('invalid request method', 405)
+
+
+    return JsonResponse(res_data, status=res_status, safe=False)
 
 
 @csrf_exempt
