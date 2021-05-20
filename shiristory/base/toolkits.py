@@ -5,6 +5,7 @@ import time
 from PIL import Image
 from django.conf import settings
 from django.contrib.auth.base_user import BaseUserManager
+from django.core.files.storage import FileSystemStorage
 
 from shiristory.settings import BASE_DIR
 
@@ -12,7 +13,7 @@ from shiristory.settings import BASE_DIR
 def random_string(length=64):
     return BaseUserManager() \
         .make_random_password(length=length,
-                              allowed_chars='abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789')
+                              allowed_chars='abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ1234567890')
 
 
 def check_missing_fields(contents, fields: list):
@@ -30,7 +31,7 @@ def timestamp_filename(file_name, file_extension):
     return f'{file_name}_{int(round(time.time() * 1000))}.{file_extension}'
 
 
-def save_uploaded_images(request, upload_to):
+def save_uploaded_medias(request, upload_to):
     """
     @return: An array of images' absolute url if success, False if fail
     """
@@ -47,20 +48,15 @@ def save_uploaded_images(request, upload_to):
     result = []
 
     try:
+        save_file_dir = os.path.join(k_media_root, upload_to)
+        if not os.path.exists(save_file_dir):
+            os.makedirs(save_file_dir)
+        file_system = FileSystemStorage(location=save_file_dir)
+
         for filename, file in request.FILES.items():
-            # Save image
-            image = Image.open(request.FILES[filename])
-
-            save_file_dir = os.path.join(k_media_root, upload_to)
-            if not os.path.exists(save_file_dir):
-                os.makedirs(save_file_dir)
-
+            # Save media
             save_file_name = timestamp_filename(random_string(5), filename.split('.')[-1])
-            save_file_path = os.path.join(save_file_dir, save_file_name)
-
-            image.save(save_file_path)
-
-            # Image url for database
+            file_system.save(save_file_name, file)
             file_abs_url = f'{k_app_url}:{k_app_port}{k_media_url}{upload_to}/{save_file_name}'
 
             result.append(file_abs_url)
@@ -68,8 +64,8 @@ def save_uploaded_images(request, upload_to):
         return result
 
     except (ValueError, OSError) as error:
-        print(f'Save Image Error: {error}')
-        raise Exception(f'Save Image Error: {error}')
+        print(f'Save Media Error: {error}')
+        raise Exception(f'Save Media Error: {error}')
 
 
 # file_path example:

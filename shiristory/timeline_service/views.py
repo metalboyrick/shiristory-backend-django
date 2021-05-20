@@ -2,7 +2,7 @@
 from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
-from shiristory.base.toolkits import save_uploaded_images
+from shiristory.base.toolkits import save_uploaded_medias
 from shiristory.timeline_service.models import Post
 
 
@@ -26,7 +26,7 @@ def create(request):
     if len(request.FILES) != 0:
         try:
             media_type = request.POST.get('media_type', 'unknown type')
-            media = save_uploaded_images(request, 'timeline')
+            media = save_uploaded_medias(request, 'timeline')
             media = media[0]
             post.media = media
             post.media_type = media_type
