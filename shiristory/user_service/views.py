@@ -1,11 +1,17 @@
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.http import HttpResponse, JsonResponse
 from .models import Profile
 from django.views.decorators.csrf import csrf_exempt
-# TODO solve pip install not reflecting to IDE issue
-# from rest_framework_jwt.views import obtain_jwt_token, verify_jwt_token, refresh_jwt_token
 import json
+
+# JWT imports
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
+from rest_framework_simplejwt.tokens import AccessToken
+
 
 def index(request):
     return HttpResponse("Hello, world. You're at the user index.")
@@ -24,6 +30,7 @@ def login_view(request):
 
     user = authenticate(request, username=username, password=password)
 
+    # TODO Log user in by sending back a JWT token, we are not using session!
     if user is not None:
         login(request, user)
         return JsonResponse({"message": "200 login OK"})
@@ -57,7 +64,23 @@ def signup_view(request):
         # TODO Log user in by sending back a JWT token
         return JsonResponse({"message": "200 Signup OK"})
 
+@api_view(['GET'])
+@authentication_classes((JWTAuthentication,))
 def testLoginView(request):
     if request.user.is_authenticated:
         return JsonResponse({"message": "Logged In as " + request.user.username})
     return JsonResponse({"message": "NOT Logged In"})
+
+@csrf_exempt
+@api_view(['POST'])
+@authentication_classes((JWTAuthentication,))
+def logout_view(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({"message": "NOT Logged In"})
+
+    # blacklist refresh_token
+    refresh_token = OutstandingToken.objects.get(user=request.user)
+    blacklisted_token = BlacklistedToken(token=refresh_token)
+    blacklisted_token.save()
+
+    return JsonResponse({"message": "200 logout OK"})
