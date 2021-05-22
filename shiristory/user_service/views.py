@@ -3,15 +3,17 @@ from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .models import Profile
 import json
+import environ
 
 # JWT imports
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
-from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 
+
 def index(request):
     return HttpResponse("Hello, world. You're at the user index.")
+
 
 @api_view(['POST'])
 @permission_classes(())
@@ -28,6 +30,16 @@ def login_view(request):
 
     return res
 
+# TODO Replace to Global variable
+env = environ.Env(
+    # set casting, default value
+    DEBUG=(bool, False)
+)
+# reading .env file
+environ.Env.read_env()
+domain = env('DOMAIN')
+
+
 @api_view(['POST'])
 @permission_classes(())
 @authentication_classes(())
@@ -37,26 +49,39 @@ def signup_view(request):
     try:
         username = json_data['username']
         password = json_data['password']
-        email = json_data['username']
+
+
     except KeyError:
         return JsonResponse({"message": "400 Missing sign up fields"}, status=400)
 
+    # Fill fields for a shiristory profile
+    email = json_data['username']
+    nickname = json_data['username']
+    bio = "Default Bio"
+
+    profile_pic_url = domain + '/media/sample.jpg'
+
     if User.objects.filter(username=username).exists():
-        return JsonResponse({"message": "409 Signup user already exists"},status=409)
+        return JsonResponse({"message": "409 Signup user already exists"}, status=409)
     else:
         new_user = User.objects.create_user(username=username,
-                                        email=email,
-                                        password=password)
-        new_profile = Profile(user=new_user)
+                                            email=email,
+                                            password=password)
+        new_profile = Profile(user=new_user,
+                              nickname=nickname,
+                              bio=bio,
+                              profile_pic_url=profile_pic_url)
         new_profile.save()
 
         return login_view(request._request)
+
 
 @api_view(['GET'])
 def whoami_view(request):
     if request.user.is_authenticated:
         return JsonResponse({"message": "Logged In as " + request.user.username})
     return JsonResponse({"message": "NOT Logged In"})
+
 
 @api_view(['POST'])
 @csrf_exempt
@@ -70,6 +95,7 @@ def logout_view(request):
     blacklisted_token.save()
 
     return JsonResponse({"message": "200 logout OK"})
+
 
 @api_view(['POST'])
 @csrf_exempt
