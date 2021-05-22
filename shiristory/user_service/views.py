@@ -58,8 +58,8 @@ def whoami_view(request):
         return JsonResponse({"message": "Logged In as " + request.user.username})
     return JsonResponse({"message": "NOT Logged In"})
 
-@csrf_exempt
 @api_view(['POST'])
+@csrf_exempt
 def logout_view(request):
     if not request.user.is_authenticated:
         return JsonResponse({"message": "NOT Logged In"})
@@ -70,3 +70,21 @@ def logout_view(request):
     blacklisted_token.save()
 
     return JsonResponse({"message": "200 logout OK"})
+
+@api_view(['POST'])
+@csrf_exempt
+def reset_password_view(request):
+    json_data = json.loads(request.body)
+    try:
+        new_password = json_data['new_password']
+    except KeyError:
+        return JsonResponse({"message": "400 Missing new password field"}, status=400)
+
+    # TODO send email for verification
+
+    user = User.objects.get(id=request.user.id)
+    if user is None:
+        return JsonResponse({"message": "404 User not found"})
+    user.set_password(new_password)
+    user.save()
+    return JsonResponse({"message": "200 Reset password OK"})

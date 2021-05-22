@@ -9,6 +9,7 @@ urlpatterns = [
     path('signup', views.signup_view, name='sign-up'),
     path('logout', views.logout_view, name='logout'),
     path('whoami', views.whoami_view, name='check-login-status'),
+    path('reset', views.reset_password_view, name='reset-password'),
     path('jwt/refresh', TokenRefreshView.as_view(), name='refresh-token'),
     # path('<str:group_id>/info/', views.get_group_info, name='Get Group Info'),
 ]
