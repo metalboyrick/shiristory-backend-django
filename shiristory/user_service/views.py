@@ -82,9 +82,20 @@ def reset_password_view(request):
 
     # TODO send email for verification
 
-    user = User.objects.get(id=request.user.id)
+    # .get throws model.DoesNotExist exception if not found
+    try:
+        user = User.objects.get(id=request.user.id)
+    except User.DoesNotExist:
+        user = None
+
     if user is None:
         return JsonResponse({"message": "404 User not found"})
+
+    # update user password
     user.set_password(new_password)
     user.save()
+
+    # log user out for security measure
+    logout_view(request._request)
+
     return JsonResponse({"message": "200 Reset password OK"})
