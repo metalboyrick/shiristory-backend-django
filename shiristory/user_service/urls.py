@@ -11,6 +11,6 @@ urlpatterns = [
     path('whoami', views.whoami_view, name='check-login-status'),
     path('reset', views.reset_password_view, name='reset-password'),
     path('jwt/refresh', TokenRefreshView.as_view(), name='refresh-token'),
-    path('profile/', include('shiristory.user_service.profile.urls'))
+    path('profile', views.profile_view, name='profile')
     # path('<str:group_id>/info/', views.get_group_info, name='Get Group Info'),
 ]

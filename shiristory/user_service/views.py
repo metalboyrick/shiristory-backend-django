@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from .models import Profile
+from .models import User
 import json
 import environ
 
@@ -49,29 +49,30 @@ def signup_view(request):
     try:
         username = json_data['username']
         password = json_data['password']
-
+        email = json_data['email']
 
     except KeyError:
         return JsonResponse({"message": "400 Missing sign up fields"}, status=400)
 
     # Fill fields for a shiristory profile
-    email = json_data['username']
     nickname = json_data['username']
     bio = "Default Bio"
-
     profile_pic_url = domain + '/media/sample.jpg'
 
     if User.objects.filter(username=username).exists():
         return JsonResponse({"message": "409 Signup user already exists"}, status=409)
     else:
+        print("BEFORE CREATE")
         new_user = User.objects.create_user(username=username,
                                             email=email,
-                                            password=password)
-        new_profile = Profile(user=new_user,
-                              nickname=nickname,
-                              bio=bio,
-                              profile_pic_url=profile_pic_url)
-        new_profile.save()
+                                            password=password,
+                                            nickname=nickname,
+                                            bio=bio,
+                                            profile_pic_url=profile_pic_url
+                                            )
+
+        new_user.save()
+        print("AFTER CREATE & SAVE")
 
         return login_view(request._request)
 
@@ -125,3 +126,34 @@ def reset_password_view(request):
     logout_view(request._request)
 
     return JsonResponse({"message": "200 Reset password OK"})
+
+
+@api_view(['GET', 'PUT'])
+def profile_view(request):
+    logged_in_user = request.user
+
+    if request.method == 'GET':
+        return JsonResponse({
+            "message": "200 get profile details OK",
+            "user": {
+                "id": logged_in_user.id,
+                "nickname": logged_in_user.nickname,
+                "bio": logged_in_user.bio,
+                "profile_pic_url": logged_in_user.profile_pic_url
+            }
+        })
+
+    # POST request
+    json_data = json.loads(request.body)
+    try:
+        new_nickname = json_data['new_nickname']
+        new_bio = json_data['new_bio']
+
+    except KeyError:
+        return JsonResponse({"message": "400 Missing nickname field"}, status=400)
+
+    logged_in_user.nickname = new_nickname
+    logged_in_user.nickname = new_bio
+    logged_in_user.save()
+
+    return JsonResponse({"message": "200 Update profile info OK"})
