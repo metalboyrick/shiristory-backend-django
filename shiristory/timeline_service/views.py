@@ -1,16 +1,14 @@
 # Create your views here.
 import json
-from datetime import datetime
 
 from bson import ObjectId
 from bson.errors import InvalidId
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.forms.models import model_to_dict
 from django.http import HttpResponseBadRequest, JsonResponse, HttpResponseNotFound
+from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 
 from shiristory.base.toolkits import save_uploaded_medias
-from shiristory.settings import DATETIME_FORMAT
 from shiristory.timeline_service.models import Post
 
 
@@ -32,9 +30,7 @@ def index(request):
     post_data = []
     post_list = list(page_result.object_list)
     for post in post_list:
-        post_dict = model_to_dict(post)
-        post_dict['_id'] = post.get_id()
-        post_dict['created_at'] = post.created_at.strftime(DATETIME_FORMAT)
+        post_dict = post.to_dict()
         post_data.append(post_dict)
 
     url = request.build_absolute_uri("/timeline/view")
@@ -55,8 +51,6 @@ def index(request):
         'previous': previous_page_url,
         'posts': post_data
     }
-
-    print(page_result.object_list)
 
     return JsonResponse(response_data)
 
@@ -97,29 +91,23 @@ def add_comment(request, post_id):
     data = json.loads(request.body)
 
     try:
-        comment = data['comment']
+        object_id = ObjectId(post_id)
+        post = Post.objects.get(pk=object_id)
+        post.comments.append({
+            'comment': data['comment'],
+            'author': 'admin',
+            'created_at': timezone.now()
+        })
+        post.save()
+
+    except InvalidId:
+        return HttpResponseNotFound("post_id not found")
+
     except KeyError:
         return HttpResponseBadRequest('Comment must not be empty')
 
-    try:
-        object_id = ObjectId(post_id)
-        Post.objects.mongo_update_one(
-            {"_id": object_id},
-            {'$push':
-                {'comments': {
-                    'comment': comment,
-                    'author': 'admin',
-                    'created_at': datetime.now()}
-                }
-            }
-        )
-    except InvalidId as e:
-        return HttpResponseNotFound("post_id not found")
-
     response = {
         '_id': post_id,
-        # TODO: change date format
-        'comments': Post.objects.get(pk=object_id).comments,
         'message': 'Add comment OK'
     }
 
