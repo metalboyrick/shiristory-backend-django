@@ -16,7 +16,6 @@ def get_msg(message, status):
 
 
 # for now not specific to user
-# TODO: pagination
 def get_group_list(request):
     res_data = {}
     res_status = 200
@@ -118,7 +117,7 @@ def get_group_info(request, group_id):
             res_data['group_admins'] = query_res.group_admins
             res_data['date_created'] = query_res.date_created.strftime(DATETIME_FORMAT)
             res_data['status'] = query_res.status
-            res_data['vote_duration'] = query_res.vote_duration
+            res_data['vote_duration'] = str(query_res.vote_duration)
             res_data['vote_threshold'] = query_res.vote_threshold
         except ObjectDoesNotExist as e:
             res_data, res_status = get_msg("group not found", 404)
