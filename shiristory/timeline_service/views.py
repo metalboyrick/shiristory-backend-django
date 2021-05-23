@@ -106,9 +106,4 @@ def add_comment(request, post_id):
     except KeyError:
         return HttpResponseBadRequest('Comment must not be empty')
 
-    response = {
-        '_id': post_id,
-        'message': 'Add comment OK'
-    }
-
-    return JsonResponse(response)
+    return JsonResponse({'_id': post_id, 'message': 'Add comment OK'})
