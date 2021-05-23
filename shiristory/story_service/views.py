@@ -7,6 +7,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
+from shiristory.settings import DATETIME_FORMAT
 from shiristory.story_service.models import Group
 
 
@@ -110,11 +111,12 @@ def get_group_info(request, group_id):
     res_status = 200
     if request.method == 'GET':
         try:
+            # TODO: REFORMAT TIME
             query_res = Group.objects.get(pk=ObjectId(group_id))
             res_data['group_name'] = query_res.group_name
             res_data['group_members'] = query_res.group_members
             res_data['group_admins'] = query_res.group_admins
-            res_data['date_created'] = query_res.date_created
+            res_data['date_created'] = query_res.date_created.strftime(DATETIME_FORMAT)
             res_data['status'] = query_res.status
             res_data['vote_duration'] = query_res.vote_duration
             res_data['vote_threshold'] = query_res.vote_threshold
@@ -156,6 +158,7 @@ def get_stories(request, group_id):
             res_data['previous'] = f'{url}?page={page_result.previous_page_number()}&size={page_size}' if page_result.has_previous() else None
             res_data['stories'] = []
 
+            # TODO: REFORMAT TIME
             for entry in list(page_result.object_list):
                 res_data['stories'].append(
                     {
@@ -164,7 +167,7 @@ def get_stories(request, group_id):
                         'story_type': entry['story_type'],
                         'story_content': entry['story_content'],
                         'next_story_type': entry['next_story_type'],
-                        'datetime': entry['datetime'],
+                        'datetime': entry['datetime'].strftime(DATETIME_FORMAT),
                         'vote_count': entry['vote_count']
                     }
                 )
