@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
 import os
+from datetime import timedelta
 
 from environ import Env
 
@@ -19,7 +20,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # reading .env file
 env = Env()
-env.read_env(env_file=BASE_DIR+"/.env")
+env.read_env(env_file=BASE_DIR + "/.env")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
@@ -52,7 +53,7 @@ INSTALLED_APPS = [
     'shiristory',
     'shiristory.user_service.apps.UserServiceConfig',
     'shiristory.story_service.apps.StoryServiceConfig',
-    'shiristory.timeline_service.apps.TimelineServiceConfig',
+    'shiristory.timeline_service.apps.TimelineServiceConfig'
 ]
 
 MIDDLEWARE = [
@@ -130,6 +131,23 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+AUTH_USER_MODEL = 'user_service.User'
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=5),
+    'USER_ID_FIELD':'username'
+}
+
 # Internationalization
 # https://docs.djangoproject.com/en/3.0/topics/i18n/
 
@@ -137,7 +155,7 @@ LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'UTC'
 
-DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S %Z'
+DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 
 USE_I18N = True
 

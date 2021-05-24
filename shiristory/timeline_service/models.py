@@ -1,7 +1,9 @@
 from djongo import models
 
+from shiristory.base.abstract_base_model import AbstractBaseModel
 
-class Comment(models.Model):
+
+class Comment(AbstractBaseModel):
     # TODO: Integrate with user
     author = models.CharField(max_length=255)
     comment = models.CharField(max_length=500)
@@ -16,7 +18,7 @@ class Comment(models.Model):
         abstract = True
 
 
-class Post(models.Model):
+class Post(AbstractBaseModel):
     _id = models.ObjectIdField()
     # TODO: Integrate with user
     author = models.CharField(max_length=255)
