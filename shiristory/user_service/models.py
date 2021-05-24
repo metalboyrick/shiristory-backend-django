@@ -2,9 +2,10 @@ from djongo import models
 from django.contrib.auth.models import AbstractUser
 
 from shiristory import settings
+from shiristory.base.abstract_base_model import AbstractBaseModel
 
 
-class User(AbstractUser):
+class User(AbstractUser, AbstractBaseModel):
     # Inherited fields
     # password, username, first_name, last_name, email,
     # is_superuser, is_staff, is_active, last_login, date_joined

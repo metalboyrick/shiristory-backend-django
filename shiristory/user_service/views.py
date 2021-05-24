@@ -1,41 +1,16 @@
+import json
+
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-
-import json
-import environ
-
 # JWT imports
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
-from rest_framework_simplejwt.views import TokenObtainPairView
+
+from shiristory import settings
 from shiristory.user_service.models import User
+
 
 def index(request):
     return HttpResponse("Hello, world. You're at the user index.")
-
-
-@api_view(['POST'])
-@permission_classes(())
-@authentication_classes(())
-@csrf_exempt
-def login_view(request):
-    # We are adding extra message to the response of simplejwt token generating view
-    res = (TokenObtainPairView.as_view()(request._request))
-    status_code = res.status_code
-    if status_code == 200:
-        res.data["message"] = "200 Login OK"
-    else:
-        res.data["message"] = str(status_code) + " Login Failed"
-
-    return res
-
-# TODO Replace to Global variable
-env = environ.Env(
-    # set casting, default value
-    DEBUG=(bool, False)
-)
-# reading .env file
-environ.Env.read_env()
-domain = env('DOMAIN')
 
 
 @api_view(['POST'])
@@ -55,7 +30,7 @@ def signup_view(request):
     # Fill fields for a shiristory profile
     nickname = json_data['username']
     bio = "Default Bio"
-    profile_pic_url = domain + '/media/sample.jpg'
+    profile_pic_url = f'{settings.APP_URL}:{settings.APP_PORT}{settings.MEDIA_URL}sample.jpg'
 
     if User.objects.filter(username=username).exists():
         return JsonResponse({"message": "409 Signup user already exists"}, status=409)
@@ -70,12 +45,6 @@ def signup_view(request):
         new_user.save()
 
         return JsonResponse({"message": "Sign up OK"})
-
-@api_view(['GET'])
-def me_view(request):
-    if request.user.is_authenticated:
-        return JsonResponse({"message": "Logged In as " + request.user.username})
-    return JsonResponse({"message": "NOT Logged In"})
 
 
 @api_view(['POST'])
@@ -112,25 +81,21 @@ def profile_view(request):
     if request.method == 'GET':
         return JsonResponse({
             "message": "200 get profile details OK",
-            "user": {
-                "id": str(logged_in_user.pk),
-                "nickname": logged_in_user.nickname,
-                "bio": logged_in_user.bio,
-                "profile_pic_url": logged_in_user.profile_pic_url
-            }
+            "user": logged_in_user.to_dict()
         })
 
-    # POST request
-    json_data = json.loads(request.body)
-    try:
-        new_nickname = json_data['new_nickname']
-        new_bio = json_data['new_bio']
+    # PUT request
+    else:
+        json_data = json.loads(request.body)
+        try:
+            new_nickname = json_data['new_nickname']
+            new_bio = json_data['new_bio']
 
-    except KeyError:
-        return JsonResponse({"message": "400 Missing nickname field"}, status=400)
+        except KeyError:
+            return JsonResponse({"message": "400 Missing nickname field"}, status=400)
 
-    logged_in_user.nickname = new_nickname
-    logged_in_user.nickname = new_bio
-    logged_in_user.save()
+        logged_in_user.nickname = new_nickname
+        logged_in_user.nickname = new_bio
+        logged_in_user.save()
 
     return JsonResponse({"message": "200 Update profile info OK"})
