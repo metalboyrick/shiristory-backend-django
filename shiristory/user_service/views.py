@@ -1,15 +1,13 @@
-from django.contrib.auth.models import User
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from .models import User
+
 import json
 import environ
 
 # JWT imports
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
-from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 from rest_framework_simplejwt.views import TokenObtainPairView
-
+from shiristory.user_service.models import User
 
 def index(request):
     return HttpResponse("Hello, world. You're at the user index.")
@@ -62,40 +60,22 @@ def signup_view(request):
     if User.objects.filter(username=username).exists():
         return JsonResponse({"message": "409 Signup user already exists"}, status=409)
     else:
-        print("BEFORE CREATE")
-        new_user = User.objects.create_user(username=username,
-                                            email=email,
-                                            password=password,
-                                            nickname=nickname,
-                                            bio=bio,
-                                            profile_pic_url=profile_pic_url
-                                            )
-
+        new_user = User(username=username,
+                        email=email,
+                        nickname=nickname,
+                        bio=bio,
+                        profile_pic_url=profile_pic_url
+                        )
+        new_user.set_password(password)
         new_user.save()
-        print("AFTER CREATE & SAVE")
 
-        return login_view(request._request)
-
+        return JsonResponse({"message": "Sign up OK"})
 
 @api_view(['GET'])
-def whoami_view(request):
+def me_view(request):
     if request.user.is_authenticated:
         return JsonResponse({"message": "Logged In as " + request.user.username})
     return JsonResponse({"message": "NOT Logged In"})
-
-
-@api_view(['POST'])
-@csrf_exempt
-def logout_view(request):
-    if not request.user.is_authenticated:
-        return JsonResponse({"message": "NOT Logged In"})
-
-    # blacklist refresh_token
-    refresh_token = OutstandingToken.objects.filter(user=request.user).latest('id')
-    blacklisted_token = BlacklistedToken(token=refresh_token)
-    blacklisted_token.save()
-
-    return JsonResponse({"message": "200 logout OK"})
 
 
 @api_view(['POST'])
@@ -122,9 +102,6 @@ def reset_password_view(request):
     user.set_password(new_password)
     user.save()
 
-    # log user out for security measure
-    logout_view(request._request)
-
     return JsonResponse({"message": "200 Reset password OK"})
 
 
@@ -136,7 +113,7 @@ def profile_view(request):
         return JsonResponse({
             "message": "200 get profile details OK",
             "user": {
-                "id": logged_in_user.id,
+                "id": str(logged_in_user.pk),
                 "nickname": logged_in_user.nickname,
                 "bio": logged_in_user.bio,
                 "profile_pic_url": logged_in_user.profile_pic_url

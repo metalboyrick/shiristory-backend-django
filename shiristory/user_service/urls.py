@@ -1,16 +1,14 @@
 from django.urls import include, path
 
 from . import views
-from rest_framework_simplejwt.views import TokenRefreshView
+from rest_framework_simplejwt.views import TokenRefreshView,TokenObtainPairView
 
 urlpatterns = [
     path('', views.index, name='index'),
-    path('login', views.login_view, name='login'),
-    path('signup', views.signup_view, name='sign-up'),
-    path('logout', views.logout_view, name='logout'),
-    path('whoami', views.whoami_view, name='check-login-status'),
-    path('reset', views.reset_password_view, name='reset-password'),
-    path('jwt/refresh', TokenRefreshView.as_view(), name='refresh-token'),
-    path('profile', views.profile_view, name='profile')
-    # path('<str:group_id>/info/', views.get_group_info, name='Get Group Info'),
+    path('jwt/token', TokenObtainPairView.as_view(), name='create_tokens'),
+    path('jwt/refresh', TokenRefreshView.as_view(), name='refresh_token'),
+    path('signup', views.signup_view, name='sign_up'),
+    path('reset', views.reset_password_view, name='reset_password'),
+    path('profile', views.profile_view, name='profile'),
+    path('me', views.me_view, name='me')
 ]

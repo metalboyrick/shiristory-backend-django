@@ -45,8 +45,7 @@ INSTALLED_APPS = [
     'shiristory',
     'shiristory.user_service.apps.UserServiceConfig',
     'shiristory.story_service.apps.StoryServiceConfig',
-    'shiristory.timeline_service.apps.TimelineServiceConfig',
-    'rest_framework_simplejwt.token_blacklist',
+    'shiristory.timeline_service.apps.TimelineServiceConfig'
 ]
 
 MIDDLEWARE = [
@@ -137,7 +136,8 @@ REST_FRAMEWORK = {
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=5)
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=5),
+    'USER_ID_FIELD':'username'
 }
 
 # Internationalization
