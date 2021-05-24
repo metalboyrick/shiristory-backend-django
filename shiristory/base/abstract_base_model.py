@@ -2,7 +2,7 @@ from datetime import datetime
 
 from django.db.models import ManyToManyField, DateTimeField
 from djongo import models
-from djongo.models import ArrayField
+from djongo.models import ArrayField, ArrayReferenceField
 
 from shiristory.settings import DATETIME_FORMAT
 
@@ -12,7 +12,13 @@ class AbstractBaseModel(models.Model):
     def to_dict(self, fields=None, exclude=None):
         data = {}
         for f in self._meta.concrete_fields + self._meta.many_to_many:
+
             value = f.value_from_object(self)
+
+            if isinstance(f, ArrayReferenceField):
+                value = type(self).objects.filter(pk__in=value)
+
+            print(value)
 
             if fields and f.name not in fields:
                 continue
@@ -33,6 +39,12 @@ class AbstractBaseModel(models.Model):
 
             if isinstance(f, DateTimeField):
                 value = value.strftime(DATETIME_FORMAT) if value else None
+
+            # Convert ArrayReferenceField datetime field into list of model in dictionary
+            if isinstance(f, ArrayReferenceField):
+                value = list(value)
+                if len(value) != 0:
+                    value = [item.to_dict(exclude=exclude) for item in value]
 
             # Convert ArrayField datetime field into DATETIME_FORMAT
             if isinstance(f, ArrayField):
