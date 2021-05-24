@@ -1,7 +1,7 @@
 from django.urls import include, path
 
 from . import views
-from rest_framework_simplejwt.views import TokenRefreshView,TokenObtainPairView
+from rest_framework_simplejwt.views import TokenRefreshView, TokenObtainPairView
 
 urlpatterns = [
     path('jwt/token', TokenObtainPairView.as_view(), name='create_tokens'),

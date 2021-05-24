@@ -81,7 +81,7 @@ def profile_view(request):
     if request.method == 'GET':
         return JsonResponse({
             "message": "200 get profile details OK",
-            "user": logged_in_user.to_dict()
+            "user": logged_in_user.to_dict(exclude=['password'])
         })
 
     # PUT request
