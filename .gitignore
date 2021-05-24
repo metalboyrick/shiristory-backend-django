@@ -5,3 +5,4 @@ __pycache__/
 venv/
 .idea/
 *.sqlite3
+media/

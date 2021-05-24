@@ -27,7 +27,7 @@ services:
     depends_on:
       - shiristory
     volumes:
-      - ./nginx/shiritori-dev.conf:/etc/nginx/conf.d/shiritori.conf
+      - ./nginx/shiristory-dev.conf:/etc/nginx/conf.d/shiristory.conf
       - ./media:/course/code/media
     networks:
       - web_network
