@@ -110,7 +110,6 @@ def get_group_info(request, group_id):
     res_status = 200
     if request.method == 'GET':
         try:
-            # TODO: REFORMAT TIME
             query_res = Group.objects.get(pk=ObjectId(group_id))
             res_data['group_name'] = query_res.group_name
             res_data['group_members'] = query_res.group_members
@@ -128,7 +127,6 @@ def get_group_info(request, group_id):
     return JsonResponse(res_data, status=res_status)
 
 
-# TODO: pagination
 def get_stories(request, group_id):
     res_data = {}
     res_status = 200
@@ -157,7 +155,6 @@ def get_stories(request, group_id):
             res_data['previous'] = f'{url}?page={page_result.previous_page_number()}&size={page_size}' if page_result.has_previous() else None
             res_data['stories'] = []
 
-            # TODO: REFORMAT TIME
             for entry in list(page_result.object_list):
                 res_data['stories'].append(
                     {
