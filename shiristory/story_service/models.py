@@ -15,7 +15,8 @@ class StoryObject(AbstractBaseModel):
         AUDIO = 2
         VIDEO = 3
 
-    user_id = models.ObjectIdField()
+    _id = models.ObjectIdField()
+    author = models.CharField(max_length=255)
     story_type = models.IntegerField(choices=StoryType.choices, blank=False)
     story_content = models.CharField(max_length=255, blank=False)
     next_story_type = models.IntegerField(choices=StoryType.choices, blank=False)
@@ -33,7 +34,7 @@ class StoryObjectForm(forms.ModelForm):
     class Meta:
         model = StoryObject
         fields = (
-            'user_id', 'story_type', 'story_content', 'next_story_type', 'vote_count'
+            'author', 'story_type', 'story_content', 'next_story_type', 'vote_count'
         )
 
 

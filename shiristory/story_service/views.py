@@ -85,7 +85,8 @@ def create_group(request):
             new_group.vote_duration = datetime.timedelta(seconds=req_body_json['vote_duration'])
             new_group.vote_threshold = req_body_json['vote_threshold']
             new_group.stories =[{
-                    'user_id': ObjectId(req_body_json['group_admins'][0]),
+                    '_id': ObjectId(),
+                    'author': new_group.group_admins.get_queryset()[0],
                     'story_type': req_body_json['first_story']['story_type'],
                     'story_content': req_body_json['first_story']['story_content'],
                     'next_story_type': req_body_json['first_story']['next_story_type'],
