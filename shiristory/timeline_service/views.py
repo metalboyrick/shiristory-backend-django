@@ -7,15 +7,14 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import HttpResponseBadRequest, JsonResponse, HttpResponseNotFound
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
+from rest_framework.decorators import api_view
 
 from shiristory.base.toolkits import save_uploaded_medias
 from shiristory.timeline_service.models import Post
 
 
+@api_view(['GET'])
 def index(request):
-    if request.method != 'GET':
-        return HttpResponseBadRequest(status=405)
-
     page = request.GET.get('page', 1)
     page_size = request.GET.get('size', 10)
 
@@ -30,7 +29,8 @@ def index(request):
     post_data = []
     post_list = list(page_result.object_list)
     for post in post_list:
-        post_dict = post.to_dict()
+        # Exclude user password
+        post_dict = post.to_dict(exclude=['password', 'friends'])
         post_data.append(post_dict)
 
     url = request.build_absolute_uri("/timeline/view")
@@ -56,14 +56,13 @@ def index(request):
 
 
 @csrf_exempt
+@api_view(['POST'])
 def create(request):
-    if request.method != 'POST':
-        return HttpResponseBadRequest(status=405)
-
     content = request.POST.get('content', '')
     inv_link = request.POST.get('inv_link', '')
 
     post = Post()
+    post.author = request.user
     post.content = content
     post.inv_link = inv_link
     post.comments = []
@@ -84,18 +83,22 @@ def create(request):
 
 
 @csrf_exempt
+@api_view(['POST'])
 def add_comment(request, post_id):
-    if request.method != 'POST':
-        return HttpResponseBadRequest(status=405)
-
     data = json.loads(request.body)
+    user = request.user
 
     try:
         object_id = ObjectId(post_id)
         post = Post.objects.get(pk=object_id)
         post.comments.append({
             'comment': data['comment'],
-            'author': 'admin',
+            'author': {
+                '_id': user.get_id(),
+                'username': user.username,
+                'nickname': user.nickname,
+                'profile_pic_url': user.profile_pic_url
+            },
             'created_at': timezone.now()
         })
         post.save()
@@ -106,4 +109,44 @@ def add_comment(request, post_id):
     except KeyError:
         return HttpResponseBadRequest('Comment must not be empty')
 
-    return JsonResponse({'_id': post_id, 'message': 'Add comment OK'})
+    return JsonResponse({'post_id': post_id, 'message': 'Add comment OK'})
+
+
+@csrf_exempt
+@api_view(['POST'])
+def like_post(request, post_id):
+    user = request.user
+    try:
+        object_id = ObjectId(post_id)
+        post = Post.objects.get(pk=object_id)
+        likes = list(post.likes.get_queryset())
+        num_of_likes = len(likes)
+        if user not in likes:
+            post.likes.add(user)
+            num_of_likes += 1
+            post.save()
+
+    except InvalidId:
+        return HttpResponseNotFound("post_id not found")
+
+    return JsonResponse({'post_id': post_id, 'num_of_likes': num_of_likes, 'message': 'Like post OK'})
+
+
+@csrf_exempt
+@api_view(['POST'])
+def dislike_post(request, post_id):
+    user = request.user
+    try:
+        object_id = ObjectId(post_id)
+        post = Post.objects.get(pk=object_id)
+        likes = list(post.likes.get_queryset())
+        num_of_likes = len(likes)
+        if user in likes:
+            post.likes.remove(user)
+            num_of_likes -= 1
+            post.save()
+
+    except InvalidId:
+        return HttpResponseNotFound("post_id not found")
+
+    return JsonResponse({'post_id': post_id, 'num_of_likes': num_of_likes, 'message': 'Dislike post OK'})
