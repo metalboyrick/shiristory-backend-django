@@ -109,7 +109,7 @@ def add_comment(request, post_id):
     except KeyError:
         return HttpResponseBadRequest('Comment must not be empty')
 
-    return JsonResponse({'_id': post_id, 'message': 'Add comment OK'})
+    return JsonResponse({'post_id': post_id, 'message': 'Add comment OK'})
 
 
 @csrf_exempt
@@ -129,7 +129,7 @@ def like_post(request, post_id):
     except InvalidId:
         return HttpResponseNotFound("post_id not found")
 
-    return JsonResponse({'_id': post_id, 'num_of_likes': num_of_likes, 'message': 'Like post OK'})
+    return JsonResponse({'post_id': post_id, 'num_of_likes': num_of_likes, 'message': 'Like post OK'})
 
 
 @csrf_exempt
@@ -149,4 +149,4 @@ def dislike_post(request, post_id):
     except InvalidId:
         return HttpResponseNotFound("post_id not found")
 
-    return JsonResponse({'_id': post_id, 'num_of_likes': num_of_likes, 'message': 'Dislike post OK'})
+    return JsonResponse({'post_id': post_id, 'num_of_likes': num_of_likes, 'message': 'Dislike post OK'})
