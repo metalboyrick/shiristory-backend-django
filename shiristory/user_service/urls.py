@@ -8,5 +8,6 @@ urlpatterns = [
     path('jwt/refresh', TokenRefreshView.as_view(), name='refresh_token'),
     path('signup', views.signup_view, name='sign_up'),
     path('reset', views.reset_password_view, name='reset_password'),
-    path('profile', views.profile_view, name='profile')
+    path('profile', views.profile_view, name='profile'),
+    # path('friends', views.friend_view, name='profile')
 ]

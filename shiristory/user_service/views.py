@@ -2,10 +2,12 @@ import json
 
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+
 # JWT imports
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 
 from shiristory import settings
+from shiristory.base.toolkits import save_uploaded_medias
 from shiristory.user_service.models import User
 
 
@@ -73,8 +75,8 @@ def reset_password_view(request):
 
     return JsonResponse({"message": "200 Reset password OK"})
 
-
 @api_view(['GET', 'PUT'])
+@csrf_exempt
 def profile_view(request):
     logged_in_user = request.user
 
@@ -83,19 +85,33 @@ def profile_view(request):
             "message": "200 get profile details OK",
             "user": logged_in_user.to_dict(exclude=['password'])
         })
-
     # PUT request
     else:
-        json_data = json.loads(request.body)
-        try:
-            new_nickname = json_data['new_nickname']
-            new_bio = json_data['new_bio']
 
-        except KeyError:
-            return JsonResponse({"message": "400 Missing nickname field"}, status=400)
+        logged_in_user.nickname = request.data.get("new_nickname", logged_in_user.nickname)
+        logged_in_user.bio = request.data.get("new_bio", logged_in_user.bio)
 
-        logged_in_user.nickname = new_nickname
-        logged_in_user.nickname = new_bio
+        if len(request.FILES) != 0:
+            try:
+                media = save_uploaded_medias(request, 'user')
+                url = media[0]
+                logged_in_user.profile_pic_url = url
+
+            except Exception as e:
+                logged_in_user.save()
+                return JsonResponse(str(e), status=400)
+
         logged_in_user.save()
+        return JsonResponse({"message": "Update profile info OK"})
 
-    return JsonResponse({"message": "200 Update profile info OK"})
+# @api_view(['POST', 'DELETE'])
+# @csrf_exempt
+# def friend_view(request):
+#     logged_in_user = request.user
+#     if request.method == 'POST':
+#         friend_id = request.data.friend_id
+#         logged_in_user.friends.add(ObjectId(friend_id))
+#     else:
+#         return JsonResponse({"message": "Update profile info OK"})
+
+
