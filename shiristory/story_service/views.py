@@ -97,9 +97,9 @@ def create_group(request):
 
             res_data, res_status = get_msg("success", 200)
 
-            # res_data = {
-            #     'group_id':
-            # }
+            res_data = {
+                'group_id':new_group.get_id()
+            }
 
         except KeyError as e:
             res_data, res_status = get_msg(f"invalid input: {e} is missing", 400)
