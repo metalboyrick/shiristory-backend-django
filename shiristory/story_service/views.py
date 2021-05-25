@@ -350,9 +350,6 @@ def edit_admin(request, group_id):
             admins = query_res.group_admins.all()
             selected_member = query_res.group_members.get(pk=ObjectId(req_body_json['member_id']))
 
-            if selected_member not in members:
-                raise Exception("member is not part of this group!")
-
             if selected_member not in admins:
                 raise Exception(f"member {req_body_json['member_id']} is not admin!")
 
@@ -368,7 +365,7 @@ def edit_admin(request, group_id):
         res_data, res_status = get_msg(f"invalid input: {e} is missing", 400)
 
     except ObjectDoesNotExist as e:
-        res_data, res_status = get_msg(f"group not found", 404)
+        res_data, res_status = get_msg(f"member or group not found", 404)
 
     except Exception as e:
         res_data, res_status = get_msg(f"{e}", 400)
