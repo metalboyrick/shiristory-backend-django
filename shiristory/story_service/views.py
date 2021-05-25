@@ -335,7 +335,7 @@ def edit_member(request, group_id):
             res_data, res_status = get_msg('invalid request method', 405)
 
     except PermissionError as e:
-        res_data, res_status = get_msg(f"user not admin", 403)
+        res_data, res_status = get_msg(f"Unauthorized access", 403)
 
     except KeyError as e:
         res_data, res_status = get_msg(f"invalid input: {e} is missing", 400)
