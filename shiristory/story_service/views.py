@@ -204,7 +204,9 @@ def edit_group_info(request, group_id):
             if len(req_body_json['group_name']) == 0:
                 raise Exception("StoryGroup name cannot be empty")
 
-            if req_body_json['vote_threshold'] > len(query_res.group_members):
+            group_members = query_res.group_members.all()
+
+            if req_body_json['vote_threshold'] > len(group_members):
                 raise Exception("Vote threshold cannot exceed group member amount")
 
             query_res.group_name = req_body_json['group_name']
