@@ -18,15 +18,12 @@ def get_msg(message, status):
     return {'message': f'{status} {message}'}, status
 
 
-# for now not specific to user
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
 def get_group_list(request):
     res_data = {}
     res_status = 200
 
-    user = request.user
-    pk = user.pk
+    user = User.objects.get(pk=request.user.pk)
 
     if request.method == 'GET':
 
@@ -34,7 +31,12 @@ def get_group_list(request):
         page_size = request.GET.get('size', 3)
 
         groups_query = StoryGroup.objects.all().order_by('-last_modified')
-        paginator = Paginator(groups_query, page_size)
+        user_groups = []
+        for group in groups_query:
+            if user.to_dict() in group.to_dict()["group_members"]:
+                user_groups.append(group)
+
+        paginator = Paginator(user_groups, page_size)
 
         url = request.build_absolute_uri("/story")
 
@@ -64,7 +66,6 @@ def get_group_list(request):
     return JsonResponse(res_data, status=res_status, safe=False)
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
 def create_group(request):
     res_data = {}
     res_status = 200
@@ -117,7 +118,7 @@ def create_group(request):
 
     return JsonResponse(res_data, status=res_status)
 
-# TODO: rewrite user related retrieval
+# TODO: AUTH
 def get_group_info(request, group_id):
     res_data = {}
     res_status = 200
@@ -140,7 +141,7 @@ def get_group_info(request, group_id):
 
     return JsonResponse(res_data, status=res_status)
 
-# TODO: rewrite user related retrieval
+# TODO: get only for specific user
 def get_stories(request, group_id):
     res_data = {}
     res_status = 200
@@ -252,9 +253,8 @@ def edit_group_info(request, group_id):
     return JsonResponse(res_data, status=res_status)
 
 
-@csrf_exempt
-# TODO: rewrite user related retrieval
-# TODO: kick/add from user model
+@api_view(['POST', 'DELETE'])
+# TODO: AUTH
 def edit_member(request, group_id):
     res_data = {}
     res_status = 200
@@ -318,8 +318,7 @@ def edit_member(request, group_id):
 
 
 @csrf_exempt
-# TODO: rewrite user related retrieval
-# TODO: kick/add from user model
+# TODO: AUTH
 def edit_admin(request, group_id):
     res_data = {}
     res_status = 200
