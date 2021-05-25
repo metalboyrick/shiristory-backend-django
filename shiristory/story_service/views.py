@@ -121,8 +121,8 @@ def get_group_info(request, group_id):
             object_id = ObjectId(group_id)
             query_res = StoryGroup.objects.get(pk=object_id)
             res_data['group_name'] = query_res.group_name
-            res_data['group_members'] = [member.to_dict() for member in query_res.group_members.get_queryset()]
-            res_data['group_admins'] = [admin.to_dict() for admin in query_res.group_admins.get_queryset()]
+            res_data['group_members'] = [member.to_dict(fields=['_id', 'username', 'first_name', 'last_name', 'nickname', 'profile_pic_url']) for member in query_res.group_members.get_queryset()]
+            res_data['group_admins'] = [admin.to_dict(fields=['_id', 'username', 'first_name', 'last_name', 'nickname', 'profile_pic_url']) for admin in query_res.group_admins.get_queryset()]
             res_data['date_created'] = query_res.date_created.strftime(DATETIME_FORMAT)
             res_data['status'] = query_res.status
             res_data['vote_duration'] = str(query_res.vote_duration)
