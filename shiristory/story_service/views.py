@@ -64,11 +64,12 @@ def get_group_list(request):
     return JsonResponse(res_data, status=res_status, safe=False)
 
 @csrf_exempt
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def create_group(request):
     res_data = {}
     res_status = 200
-
-
+    user = request.user
 
     if request.method == 'POST':
         try:
@@ -85,9 +86,7 @@ def create_group(request):
                 member = User.objects.get(pk=ObjectId(member_id))
                 new_group.group_members.add(member)
 
-            for admin_id in req_body_json['group_admins']:
-                admin = User.objects.get(pk=ObjectId(admin_id))
-                new_group.group_admins.add(admin)
+            new_group.group_admins.add(user)
 
             new_group.vote_duration = datetime.timedelta(seconds=req_body_json['vote_duration'])
             new_group.vote_threshold = req_body_json['vote_threshold']
