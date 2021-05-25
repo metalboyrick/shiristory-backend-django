@@ -243,44 +243,43 @@ def edit_member(request, group_id):
     res_status = 200
 
     try:
+
+        query_res = StoryGroup.objects.get(pk=ObjectId(group_id))
+
+        if not query_res:
+            raise ObjectDoesNotExist()
+
+        req_body_json = json.loads(request.body)
+
+        if not req_body_json['member_id']:
+            raise KeyError('member_id')
+
         if request.method == 'POST':
 
-            query_res = StoryGroup.objects.get(pk=ObjectId(group_id))
+            members = query_res.group_members.all()
+            selected_member = User.objects.get(pk=ObjectId(req_body_json['member_id']))
 
-            if not query_res:
-                raise ObjectDoesNotExist()
-
-            req_body_json = json.loads(request.body)
-
-            if not req_body_json['member_id']:
-                raise KeyError('member_id')
-
-            if req_body_json['member_id'] in query_res.group_members:
+            if selected_member in members:
                 raise Exception("member already present!")
 
-            query_res.group_members.append(req_body_json['member_id'])
+            query_res.group_members.add(selected_member)
             query_res.save()
 
             res_data, res_status = get_msg(f"member add ok", 200)
 
         elif request.method == 'DELETE':
-            query_res = StoryGroup.objects.get(pk=ObjectId(group_id))
 
-            if not query_res:
-                raise ObjectDoesNotExist()
+            members = query_res.group_members.all()
+            admins = query_res.group_admins.all()
+            selected_member = query_res.group_members.get(pk=ObjectId(req_body_json['member_id']))
 
-            req_body_json = json.loads(request.body)
+            if selected_member not in members:
+                raise Exception("member is not part of this group!")
 
-            if not req_body_json['member_id']:
-                raise KeyError('member_id')
+            query_res.group_members.remove(selected_member)
 
-            if req_body_json['member_id'] not in query_res.group_members:
-                raise Exception("member is not in group!")
-
-            query_res.group_members.remove(req_body_json['member_id'])
-
-            if req_body_json['member_id'] in query_res.group_admins:
-                query_res.group_admins.remove(req_body_json['member_id'])
+            if selected_member in admins:
+                query_res.group_admins.remove(selected_member)
 
             query_res.save()
 
@@ -293,7 +292,7 @@ def edit_member(request, group_id):
         res_data, res_status = get_msg(f"invalid input: {e} is missing", 400)
 
     except ObjectDoesNotExist as e:
-        res_data, res_status = get_msg(f"group not found", 404)
+        res_data, res_status = get_msg(f"member or group not found", 404)
 
     except Exception as e:
         res_data, res_status = get_msg(f"{e}", 400)
