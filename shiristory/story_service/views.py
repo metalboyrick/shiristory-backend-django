@@ -21,6 +21,11 @@ def get_group_list(request):
     res_data = {}
     res_status = 200
 
+    if not request.user.is_authenticated:
+        res_data, res_status = get_msg('User not logged in', 403)
+        return JsonResponse(res_data, status=res_status, safe=False)
+
+
     if request.method == 'GET':
 
         current_page = request.GET.get('page', 1)
@@ -56,11 +61,12 @@ def get_group_list(request):
 
     return JsonResponse(res_data, status=res_status, safe=False)
 
-
 @csrf_exempt
 def create_group(request):
     res_data = {}
     res_status = 200
+
+
 
     if request.method == 'POST':
         try:
@@ -68,7 +74,6 @@ def create_group(request):
             req_body_json = json.loads(request.body)
 
             # TODO: set the admin to the user who sent this request
-
 
             new_group = StoryGroup()
 
