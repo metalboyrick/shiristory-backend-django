@@ -16,11 +16,9 @@ from shiristory.user_service.models import User
 def index(request):
     return HttpResponse("Hello, world. You're at the user index.")
 
-
 @api_view(['POST'])
 @permission_classes(())
 @authentication_classes(())
-@csrf_exempt
 def signup_view(request):
     json_data = json.loads(request.body)
     try:
@@ -52,7 +50,6 @@ def signup_view(request):
 
 
 @api_view(['POST'])
-@csrf_exempt
 def reset_password_view(request):
     json_data = json.loads(request.body)
     try:
@@ -79,7 +76,6 @@ def reset_password_view(request):
 
 
 @api_view(['GET', 'PUT'])
-@csrf_exempt
 def profile_view(request):
     logged_in_user = request.user
 
@@ -107,6 +103,7 @@ def profile_view(request):
         logged_in_user.save()
         return JsonResponse({"message": "Update profile info OK"})
 
+
 @api_view(['POST'])
 def add_friend(request, friend_username):
     try:
@@ -126,6 +123,7 @@ def add_friend(request, friend_username):
 
     except InvalidId:
         return JsonResponse({"message": "Invalid Id"})
+
 
 @api_view(['GET'])
 def search_friend(request, query):
@@ -148,6 +146,7 @@ def search_friend(request, query):
     except InvalidId:
         return JsonResponse({"message": "Invalid Id"})
 
+
 @api_view(['DELETE'])
 def delete_friend(request, friend_id):
     try:
@@ -167,4 +166,3 @@ def delete_friend(request, friend_id):
 
     except InvalidId:
         return JsonResponse({"message": "Invalid Id"})
-
