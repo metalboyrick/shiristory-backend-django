@@ -63,7 +63,6 @@ def get_group_list(request):
 
     return JsonResponse(res_data, status=res_status, safe=False)
 
-@csrf_exempt
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_group(request):
@@ -192,10 +191,13 @@ def get_stories(request, group_id):
     return JsonResponse(res_data, status=res_status, safe=False)
 
 
-@csrf_exempt
+
+@api_view(['PATCH'])
 def edit_group_info(request, group_id):
     res_data = {}
     res_status = 200
+
+    user = User.objects.get(pk=request.user.pk)
 
     if request.method == 'PATCH':
         try:
@@ -203,6 +205,11 @@ def edit_group_info(request, group_id):
 
             if not query_res:
                 raise ObjectDoesNotExist()
+
+            dict_query = query_res.to_dict()
+
+            if user.to_dict() not in dict_query["group_admins"]:
+                raise PermissionError
 
             req_body_json = json.loads(request.body)
 
@@ -227,6 +234,9 @@ def edit_group_info(request, group_id):
             res_data['vote_duration'] = req_body_json['vote_duration']
             res_data['vote_threshold'] = req_body_json['vote_threshold']
 
+        except PermissionError as e:
+            res_data, res_status = get_msg(f"user not admin", 403)
+
         except KeyError as e:
             res_data, res_status = get_msg(f"invalid input: {e} is missing", 400)
 
@@ -244,6 +254,7 @@ def edit_group_info(request, group_id):
 
 @csrf_exempt
 # TODO: rewrite user related retrieval
+# TODO: kick/add from user model
 def edit_member(request, group_id):
     res_data = {}
     res_status = 200
@@ -308,6 +319,7 @@ def edit_member(request, group_id):
 
 @csrf_exempt
 # TODO: rewrite user related retrieval
+# TODO: kick/add from user model
 def edit_admin(request, group_id):
     res_data = {}
     res_status = 200
