@@ -15,7 +15,6 @@ from shiristory.timeline_service.models import Post
 
 @api_view(['GET'])
 def index(request):
-
     page = request.GET.get('page', 1)
     page_size = request.GET.get('size', 10)
 
@@ -59,7 +58,6 @@ def index(request):
 @csrf_exempt
 @api_view(['POST'])
 def create(request):
-
     content = request.POST.get('content', '')
     inv_link = request.POST.get('inv_link', '')
 
@@ -87,7 +85,6 @@ def create(request):
 @csrf_exempt
 @api_view(['POST'])
 def add_comment(request, post_id):
-
     data = json.loads(request.body)
     user = request.user
 
@@ -117,12 +114,39 @@ def add_comment(request, post_id):
 
 @csrf_exempt
 @api_view(['POST'])
-def like_post():
-    pass
+def like_post(request, post_id):
+    user = request.user
+    try:
+        object_id = ObjectId(post_id)
+        post = Post.objects.get(pk=object_id)
+        likes = list(post.likes.get_queryset())
+        num_of_likes = len(likes)
+        if user not in likes:
+            post.likes.add(user)
+            num_of_likes += 1
+            post.save()
+
+    except InvalidId:
+        return HttpResponseNotFound("post_id not found")
+
+    return JsonResponse({'_id': post_id, 'num_of_likes': num_of_likes, 'message': 'Like post OK'})
 
 
 @csrf_exempt
 @api_view(['POST'])
-def dislike_post():
-    pass
+def dislike_post(request, post_id):
+    user = request.user
+    try:
+        object_id = ObjectId(post_id)
+        post = Post.objects.get(pk=object_id)
+        likes = list(post.likes.get_queryset())
+        num_of_likes = len(likes)
+        if user in likes:
+            post.likes.remove(user)
+            num_of_likes -= 1
+            post.save()
 
+    except InvalidId:
+        return HttpResponseNotFound("post_id not found")
+
+    return JsonResponse({'_id': post_id, 'num_of_likes': num_of_likes, 'message': 'Dislike post OK'})
