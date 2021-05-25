@@ -148,10 +148,13 @@ def get_group_info(request, group_id):
 
     return JsonResponse(res_data, status=res_status)
 
-# TODO: get only for specific user
+
+@api_view(['GET'])
 def get_stories(request, group_id):
     res_data = {}
     res_status = 200
+
+    user = User.objects.get(pk=request.user.pk)
 
     if request.method == 'GET':
         try:
@@ -160,6 +163,9 @@ def get_stories(request, group_id):
             page_size = request.GET.get('size', 3)
 
             query_res = StoryGroup.objects.get(pk=ObjectId(group_id))
+
+            if user.to_dict() not in query_res.to_dict()["group_members"]:
+                raise PermissionError
 
             paginator = Paginator(query_res.stories, page_size)
 
@@ -180,8 +186,8 @@ def get_stories(request, group_id):
             for entry in list(page_result.object_list):
                 res_data['stories'].append(
                     {
-                        'story_id': str(entry['story_id']),
-                        'user_id': entry['user_id'],
+                        'story_id': str(entry['_id']),
+                        'author': entry['author'],
                         'story_type': entry['story_type'],
                         'story_content': entry['story_content'],
                         'next_story_type': entry['next_story_type'],
@@ -192,6 +198,9 @@ def get_stories(request, group_id):
 
         except ObjectDoesNotExist as e:
             res_data, res_status = get_msg("group not found", 404)
+
+        except PermissionError as e:
+            res_data, res_status = get_msg("unauthorized access", 403)
 
     else:
         res_data, res_status = get_msg('invalid request method', 405)
