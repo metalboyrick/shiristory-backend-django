@@ -1,5 +1,7 @@
 import json
 
+from bson import ObjectId
+from bson.errors import InvalidId
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
@@ -75,6 +77,7 @@ def reset_password_view(request):
 
     return JsonResponse({"message": "200 Reset password OK"})
 
+
 @api_view(['GET', 'PUT'])
 @csrf_exempt
 def profile_view(request):
@@ -104,14 +107,64 @@ def profile_view(request):
         logged_in_user.save()
         return JsonResponse({"message": "Update profile info OK"})
 
-# @api_view(['POST', 'DELETE'])
-# @csrf_exempt
-# def friend_view(request):
-#     logged_in_user = request.user
-#     if request.method == 'POST':
-#         friend_id = request.data.friend_id
-#         logged_in_user.friends.add(ObjectId(friend_id))
-#     else:
-#         return JsonResponse({"message": "Update profile info OK"})
+@api_view(['POST'])
+def add_friend(request, friend_username):
+    try:
+        logged_in_user = request.user
+        friends = logged_in_user.friends
+        friends_list = list(friends.get_queryset())
+        new_friend = User.objects.get(username=friend_username)
 
+        if new_friend not in friends_list:
+            friends.add(new_friend)
+            return JsonResponse({"message": "Add friend OK"})
+
+        return JsonResponse({"message": "Friend exists!"})
+
+    except User.DoesNotExist:
+        return JsonResponse({"message": "User does not exist"})
+
+    except InvalidId:
+        return JsonResponse({"message": "Invalid Id"})
+
+@api_view(['GET'])
+def search_friend(request, query):
+    try:
+        logged_in_user = request.user
+        friends = logged_in_user.friends
+        friends_list = list(friends.get_queryset())
+
+        matched = []
+        for friend in friends_list:
+            if query in friend.nickname:
+                matched.append(friend.to_dict(exclude=['password']))
+        return JsonResponse({
+            "message": "Search friend OK",
+            "candidates": matched
+        })
+    except User.DoesNotExist:
+        return JsonResponse({"message": "User does not exist"})
+
+    except InvalidId:
+        return JsonResponse({"message": "Invalid Id"})
+
+@api_view(['DELETE'])
+def delete_friend(request, friend_id):
+    try:
+        logged_in_user = request.user
+        friends = logged_in_user.friends
+        friends_list = list(friends.get_queryset())
+
+        if friend_id not in [str(friend._id) for friend in friends_list]:
+            return JsonResponse({"message": "Friend does not exist"})
+
+        friends.remove(User.objects.get(pk=ObjectId(friend_id)))
+
+        return JsonResponse({"message": "Delete friend OK"})
+
+    except User.DoesNotExist:
+        return JsonResponse({"message": "User does not exist"})
+
+    except InvalidId:
+        return JsonResponse({"message": "Invalid Id"})
 
