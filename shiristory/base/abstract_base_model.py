@@ -2,7 +2,7 @@ from datetime import datetime
 
 from django.db.models import ManyToManyField, DateTimeField
 from djongo import models
-from djongo.models import ArrayField, ArrayReferenceField
+from djongo.models import ArrayField, ArrayReferenceField, ForeignKey
 
 from shiristory.settings import DATETIME_FORMAT
 
@@ -15,10 +15,12 @@ class AbstractBaseModel(models.Model):
 
             value = f.value_from_object(self)
 
-            if isinstance(f, ArrayReferenceField):
-                value = type(self).objects.filter(pk__in=value)
-
-            print(value)
+            if isinstance(f, ArrayReferenceField) or isinstance(f, ForeignKey):
+                if type(value) != set:
+                    value = {value}
+                value = f.related_model.objects.filter(pk__in=value)
+                # Convert queryset to list
+                value = list(value)
 
             if fields and f.name not in fields:
                 continue
@@ -30,24 +32,26 @@ class AbstractBaseModel(models.Model):
             if f.name == '_id':
                 value = str(value)
 
-            if isinstance(f, ManyToManyField):
+            elif isinstance(f, ManyToManyField):
                 value = [str(i.id) for i in value] if self.pk else None
 
             # TODO
             # if isinstance(f, EmbeddedField):
             #     value = value.to_dict()
 
-            if isinstance(f, DateTimeField):
+            elif isinstance(f, DateTimeField):
                 value = value.strftime(DATETIME_FORMAT) if value else None
 
             # Convert ArrayReferenceField datetime field into list of model in dictionary
-            if isinstance(f, ArrayReferenceField):
-                value = list(value)
+            elif isinstance(f, ArrayReferenceField):
                 if len(value) != 0:
                     value = [item.to_dict(exclude=exclude) for item in value]
 
+            elif isinstance(f, ForeignKey):
+                value = value[0].to_dict(exclude=exclude)
+
             # Convert ArrayField datetime field into DATETIME_FORMAT
-            if isinstance(f, ArrayField):
+            elif isinstance(f, ArrayField):
                 if len(value) != 0:
                     temp = []
                     first_item = value[0]
