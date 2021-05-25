@@ -6,6 +6,8 @@ from django.core.exceptions import *
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from rest_framework.decorators import permission_classes, api_view
+from rest_framework.permissions import IsAuthenticated
 
 from shiristory.settings import DATETIME_FORMAT
 from shiristory.story_service.models import StoryGroup
@@ -17,14 +19,14 @@ def get_msg(message, status):
 
 
 # for now not specific to user
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def get_group_list(request):
     res_data = {}
     res_status = 200
 
-    if not request.user.is_authenticated:
-        res_data, res_status = get_msg('User not logged in', 403)
-        return JsonResponse(res_data, status=res_status, safe=False)
-
+    user = request.user
+    pk = user.pk
 
     if request.method == 'GET':
 
