@@ -29,6 +29,8 @@ class StoryObject(AbstractBaseModel):
     class Meta:
         abstract = True
 
+    objects = models.DjongoManager()
+
 
 class StoryObjectForm(forms.ModelForm):
     class Meta:
@@ -52,6 +54,8 @@ class VotePool(AbstractBaseModel):
 
     def get_id(self):
         return str(self.pk)
+
+    objects = models.DjongoManager()
 
 class StoryGroup(AbstractBaseModel):
     # choices for story status
@@ -88,6 +92,8 @@ class StoryGroup(AbstractBaseModel):
     vote_pool = models.EmbeddedField(
         model_container=VotePool
     )
+
+    objects = models.DjongoManager()
 
     def get_id(self):
         return str(self.pk)

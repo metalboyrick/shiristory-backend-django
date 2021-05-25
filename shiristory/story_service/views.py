@@ -47,7 +47,7 @@ def get_group_list(request):
 
         for group_item in group_list:
             res_data['groups'].append({
-                'group_id': str(group_item.group_id),
+                'group_id': str(group_item.pk),
                 'group_name': group_item.group_name
             })
 
