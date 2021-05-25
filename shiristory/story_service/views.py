@@ -320,13 +320,17 @@ def edit_admin(request, group_id):
             if not req_body_json['member_id']:
                 raise KeyError('member_id')
 
-            if req_body_json['member_id'] not in query_res.group_members:
+            members = query_res.group_members.all()
+            admins = query_res.group_admins.all()
+            selected_member = query_res.group_members.get(pk=ObjectId(req_body_json['member_id']))
+
+            if selected_member not in members:
                 raise Exception("member is not part of this group!")
 
-            if req_body_json['member_id'] in query_res.group_admins:
+            if selected_member in admins:
                 raise Exception("admin already present!")
 
-            query_res.group_admins.append(req_body_json['member_id'])
+            query_res.group_admins.add(selected_member)
             query_res.save()
 
             res_data, res_status = get_msg(f"admin add ok", 200)
@@ -342,10 +346,17 @@ def edit_admin(request, group_id):
             if not req_body_json['member_id']:
                 raise KeyError('member_id')
 
-            if req_body_json['member_id'] not in query_res.group_admins:
+            members = query_res.group_members.all()
+            admins = query_res.group_admins.all()
+            selected_member = query_res.group_members.get(pk=ObjectId(req_body_json['member_id']))
+
+            if selected_member not in members:
+                raise Exception("member is not part of this group!")
+
+            if selected_member not in admins:
                 raise Exception(f"member {req_body_json['member_id']} is not admin!")
 
-            query_res.group_admins.remove(req_body_json['member_id'])
+            query_res.group_admins.remove(selected_member)
             query_res.save()
 
             res_data, res_status = get_msg(f"admin delete ok", 200)
