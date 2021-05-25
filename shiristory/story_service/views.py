@@ -76,8 +76,6 @@ def create_group(request):
             request_body = request.body
             req_body_json = json.loads(request.body)
 
-            # TODO: set the admin to the user who sent this request
-
             new_group = StoryGroup()
 
             new_group.group_name = req_body_json['group_name']
@@ -118,14 +116,21 @@ def create_group(request):
 
     return JsonResponse(res_data, status=res_status)
 
-# TODO: AUTH
+
+@api_view(['GET'])
 def get_group_info(request, group_id):
     res_data = {}
     res_status = 200
+    user = User.objects.get(pk=request.user.pk)
+
     if request.method == 'GET':
         try:
             object_id = ObjectId(group_id)
             query_res = StoryGroup.objects.get(pk=object_id)
+
+            if user.to_dict() not in query_res.to_dict()["group_members"]:
+                raise PermissionError
+
             res_data['group_name'] = query_res.group_name
             res_data['group_members'] = [member.to_dict(fields=['_id', 'username', 'first_name', 'last_name', 'nickname', 'profile_pic_url']) for member in query_res.group_members.get_queryset()]
             res_data['group_admins'] = [admin.to_dict(fields=['_id', 'username', 'first_name', 'last_name', 'nickname', 'profile_pic_url']) for admin in query_res.group_admins.get_queryset()]
@@ -135,6 +140,8 @@ def get_group_info(request, group_id):
             res_data['vote_threshold'] = query_res.vote_threshold
         except ObjectDoesNotExist as e:
             res_data, res_status = get_msg("group not found", 404)
+        except PermissionError as e:
+            res_data, res_status = get_msg("unauthorized access", 403)
 
     else:
         res_data, res_status = get_msg('invalid request method', 405)
