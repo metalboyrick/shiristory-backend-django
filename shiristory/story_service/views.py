@@ -8,7 +8,8 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
 from shiristory.settings import DATETIME_FORMAT
-from shiristory.story_service.models import Group
+from shiristory.story_service.models import StoryGroup
+from shiristory.user_service.models import User
 
 
 def get_msg(message, status):
@@ -25,7 +26,7 @@ def get_group_list(request):
         current_page = request.GET.get('page', 1)
         page_size = request.GET.get('size', 3)
 
-        groups_query = Group.objects.all().order_by('-last_modified')
+        groups_query = StoryGroup.objects.all().order_by('-last_modified')
         paginator = Paginator(groups_query, page_size)
 
         url = request.build_absolute_uri("/story")
@@ -68,31 +69,37 @@ def create_group(request):
 
             # TODO: set the admin to the user who sent this request
 
-            new_id = ObjectId()
 
-            new_group = Group(
-                group_id=new_id,
-                group_name=req_body_json['group_name'],
-                group_members=req_body_json['group_members'],
-                group_admins=req_body_json['group_admins'],
-                vote_duration=datetime.timedelta(seconds=req_body_json['vote_duration']),
-                vote_threshold=req_body_json['vote_threshold'],
-                stories=[{
-                    'story_id': ObjectId(),
-                    'user_id': req_body_json['group_admins'][0],
+            new_group = StoryGroup()
+
+            new_group.group_name = req_body_json['group_name']
+
+            for member_id in req_body_json['group_members']:
+                member = User.objects.get(pk=ObjectId(member_id))
+                new_group.group_members.add(member)
+
+            for admin_id in req_body_json['group_admins']:
+                admin = User.objects.get(pk=ObjectId(admin_id))
+                new_group.group_admins.add(admin)
+
+            new_group.vote_duration = datetime.timedelta(seconds=req_body_json['vote_duration'])
+            new_group.vote_threshold = req_body_json['vote_threshold']
+            new_group.stories =[{
+                    'user_id': ObjectId(req_body_json['group_admins'][0]),
                     'story_type': req_body_json['first_story']['story_type'],
                     'story_content': req_body_json['first_story']['story_content'],
                     'next_story_type': req_body_json['first_story']['next_story_type'],
                     'datetime': datetime.datetime.now(),
                     'vote_count': 0
                 }]
-            )
 
             new_group.save()
 
-            res_data = {
-                'group_id': str(new_id)
-            }
+            res_data, res_status = get_msg("success", 200)
+
+            # res_data = {
+            #     'group_id':
+            # }
 
         except KeyError as e:
             res_data, res_status = get_msg(f"invalid input: {e} is missing", 400)
@@ -110,7 +117,7 @@ def get_group_info(request, group_id):
     res_status = 200
     if request.method == 'GET':
         try:
-            query_res = Group.objects.get(pk=ObjectId(group_id))
+            query_res = StoryGroup.objects.get(pk=group_id)
             res_data['group_name'] = query_res.group_name
             res_data['group_members'] = query_res.group_members
             res_data['group_admins'] = query_res.group_admins
@@ -137,7 +144,7 @@ def get_stories(request, group_id):
             current_page = request.GET.get('page', 1)
             page_size = request.GET.get('size', 3)
 
-            query_res = Group.objects.get(pk=ObjectId(group_id))
+            query_res = StoryGroup.objects.get(pk=ObjectId(group_id))
 
             paginator = Paginator(query_res.stories, page_size)
 
@@ -184,7 +191,7 @@ def edit_group_info(request, group_id):
 
     if request.method == 'PATCH':
         try:
-            query_res = Group.objects.get(pk=ObjectId(group_id))
+            query_res = StoryGroup.objects.get(pk=ObjectId(group_id))
 
             if not query_res:
                 raise ObjectDoesNotExist()
@@ -193,7 +200,7 @@ def edit_group_info(request, group_id):
 
             # check for all the params
             if len(req_body_json['group_name']) == 0:
-                raise Exception("Group name cannot be empty")
+                raise Exception("StoryGroup name cannot be empty")
 
             if req_body_json['vote_threshold'] > len(query_res.group_members):
                 raise Exception("Vote threshold cannot exceed group member amount")
@@ -233,7 +240,7 @@ def edit_member(request, group_id):
     try:
         if request.method == 'POST':
 
-            query_res = Group.objects.get(pk=ObjectId(group_id))
+            query_res = StoryGroup.objects.get(pk=ObjectId(group_id))
 
             if not query_res:
                 raise ObjectDoesNotExist()
@@ -252,7 +259,7 @@ def edit_member(request, group_id):
             res_data, res_status = get_msg(f"member add ok", 200)
 
         elif request.method == 'DELETE':
-            query_res = Group.objects.get(pk=ObjectId(group_id))
+            query_res = StoryGroup.objects.get(pk=ObjectId(group_id))
 
             if not query_res:
                 raise ObjectDoesNotExist()
@@ -297,7 +304,7 @@ def edit_admin(request, group_id):
     try:
         if request.method == 'POST':
 
-            query_res = Group.objects.get(pk=ObjectId(group_id))
+            query_res = StoryGroup.objects.get(pk=ObjectId(group_id))
 
             if not query_res:
                 raise ObjectDoesNotExist()
@@ -319,7 +326,7 @@ def edit_admin(request, group_id):
             res_data, res_status = get_msg(f"admin add ok", 200)
 
         elif request.method == 'DELETE':
-            query_res = Group.objects.get(pk=ObjectId(group_id))
+            query_res = StoryGroup.objects.get(pk=ObjectId(group_id))
 
             if not query_res:
                 raise ObjectDoesNotExist()
