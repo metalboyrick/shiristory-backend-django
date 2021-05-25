@@ -8,6 +8,8 @@ from shiristory.settings import DATETIME_FORMAT
 
 
 class AbstractBaseModel(models.Model):
+    def get_id(self):
+        return str(self.pk)
 
     def to_dict(self, fields=None, exclude=None):
         data = {}
@@ -35,7 +37,7 @@ class AbstractBaseModel(models.Model):
             elif isinstance(f, ManyToManyField):
                 value = [str(i.id) for i in value] if self.pk else None
 
-            # TODO
+            # TODO: DateTime Field
             # if isinstance(f, EmbeddedField):
             #     value = value.to_dict()
 
