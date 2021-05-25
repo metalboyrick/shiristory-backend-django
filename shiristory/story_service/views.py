@@ -111,16 +111,17 @@ def create_group(request):
 
     return JsonResponse(res_data, status=res_status)
 
-
+# TODO: rewrite user related retrieval
 def get_group_info(request, group_id):
     res_data = {}
     res_status = 200
     if request.method == 'GET':
         try:
-            query_res = StoryGroup.objects.get(pk=group_id)
+            object_id = ObjectId(group_id)
+            query_res = StoryGroup.objects.get(pk=object_id)
             res_data['group_name'] = query_res.group_name
-            res_data['group_members'] = query_res.group_members
-            res_data['group_admins'] = query_res.group_admins
+            res_data['group_members'] = [member.to_dict() for member in query_res.group_members.get_queryset()]
+            res_data['group_admins'] = [admin.to_dict() for admin in query_res.group_admins.get_queryset()]
             res_data['date_created'] = query_res.date_created.strftime(DATETIME_FORMAT)
             res_data['status'] = query_res.status
             res_data['vote_duration'] = str(query_res.vote_duration)
@@ -133,7 +134,7 @@ def get_group_info(request, group_id):
 
     return JsonResponse(res_data, status=res_status)
 
-
+# TODO: rewrite user related retrieval
 def get_stories(request, group_id):
     res_data = {}
     res_status = 200
@@ -233,6 +234,7 @@ def edit_group_info(request, group_id):
 
 
 @csrf_exempt
+# TODO: rewrite user related retrieval
 def edit_member(request, group_id):
     res_data = {}
     res_status = 200
@@ -297,6 +299,7 @@ def edit_member(request, group_id):
 
 
 @csrf_exempt
+# TODO: rewrite user related retrieval
 def edit_admin(request, group_id):
     res_data = {}
     res_status = 200
