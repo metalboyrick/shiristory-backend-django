@@ -6,8 +6,7 @@ from django.core.exceptions import *
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from rest_framework.decorators import permission_classes, api_view
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import api_view
 
 from shiristory.settings import DATETIME_FORMAT
 from shiristory.story_service.models import StoryGroup
@@ -48,8 +47,10 @@ def get_group_list(request):
         res_data['page'] = current_page
         res_data['page_size'] = paginator.per_page
         res_data['total_pages'] = paginator.num_pages
-        res_data['next'] = f'{url}?page={page_result.next_page_number()}&size={page_size}' if page_result.has_next() else None
-        res_data['previous'] = f'{url}?page={page_result.previous_page_number()}&size={page_size}' if page_result.has_previous() else None
+        res_data[
+            'next'] = f'{url}?page={page_result.next_page_number()}&size={page_size}' if page_result.has_next() else None
+        res_data[
+            'previous'] = f'{url}?page={page_result.previous_page_number()}&size={page_size}' if page_result.has_previous() else None
         res_data['groups'] = []
 
         group_list = list(page_result.object_list)
@@ -64,6 +65,7 @@ def get_group_list(request):
         res_data, res_status = get_msg('invalid request method', 405)
 
     return JsonResponse(res_data, status=res_status, safe=False)
+
 
 @api_view(['POST'])
 def create_group(request):
@@ -88,22 +90,22 @@ def create_group(request):
 
             new_group.vote_duration = datetime.timedelta(seconds=req_body_json['vote_duration'])
             new_group.vote_threshold = req_body_json['vote_threshold']
-            new_group.stories =[{
-                    '_id': ObjectId(),
-                    'author': new_group.group_admins.get_queryset()[0],
-                    'story_type': req_body_json['first_story']['story_type'],
-                    'story_content': req_body_json['first_story']['story_content'],
-                    'next_story_type': req_body_json['first_story']['next_story_type'],
-                    'datetime': datetime.datetime.now(),
-                    'vote_count': 0
-                }]
+            new_group.stories = [{
+                '_id': ObjectId(),
+                'author': new_group.group_admins.get_queryset()[0],
+                'story_type': req_body_json['first_story']['story_type'],
+                'story_content': req_body_json['first_story']['story_content'],
+                'next_story_type': req_body_json['first_story']['next_story_type'],
+                'datetime': datetime.datetime.now(),
+                'vote_count': 0
+            }]
 
             new_group.save()
 
             res_data, res_status = get_msg("success", 200)
 
             res_data = {
-                'group_id':new_group.get_id()
+                'group_id': new_group.get_id()
             }
 
         except KeyError as e:
@@ -132,8 +134,12 @@ def get_group_info(request, group_id):
                 raise PermissionError
 
             res_data['group_name'] = query_res.group_name
-            res_data['group_members'] = [member.to_dict(fields=['_id', 'username', 'first_name', 'last_name', 'nickname', 'profile_pic_url']) for member in query_res.group_members.get_queryset()]
-            res_data['group_admins'] = [admin.to_dict(fields=['_id', 'username', 'first_name', 'last_name', 'nickname', 'profile_pic_url']) for admin in query_res.group_admins.get_queryset()]
+            res_data['group_members'] = [
+                member.to_dict(fields=['_id', 'username', 'first_name', 'last_name', 'nickname', 'profile_pic_url']) for
+                member in query_res.group_members.get_queryset()]
+            res_data['group_admins'] = [
+                admin.to_dict(fields=['_id', 'username', 'first_name', 'last_name', 'nickname', 'profile_pic_url']) for
+                admin in query_res.group_admins.get_queryset()]
             res_data['date_created'] = query_res.date_created.strftime(DATETIME_FORMAT)
             res_data['status'] = query_res.status
             res_data['vote_duration'] = str(query_res.vote_duration)
@@ -179,8 +185,10 @@ def get_stories(request, group_id):
             res_data['page'] = current_page
             res_data['page_size'] = paginator.per_page
             res_data['total_pages'] = paginator.num_pages
-            res_data['next'] = f'{url}?page={page_result.next_page_number()}&size={page_size}' if page_result.has_next() else None
-            res_data['previous'] = f'{url}?page={page_result.previous_page_number()}&size={page_size}' if page_result.has_previous() else None
+            res_data[
+                'next'] = f'{url}?page={page_result.next_page_number()}&size={page_size}' if page_result.has_next() else None
+            res_data[
+                'previous'] = f'{url}?page={page_result.previous_page_number()}&size={page_size}' if page_result.has_previous() else None
             res_data['stories'] = []
 
             for entry in list(page_result.object_list):
@@ -206,7 +214,6 @@ def get_stories(request, group_id):
         res_data, res_status = get_msg('invalid request method', 405)
 
     return JsonResponse(res_data, status=res_status, safe=False)
-
 
 
 @api_view(['PATCH'])
@@ -270,7 +277,6 @@ def edit_group_info(request, group_id):
 
 
 @api_view(['POST', 'DELETE'])
-# TODO: AUTH
 def edit_member(request, group_id):
     res_data = {}
     res_status = 200
@@ -279,8 +285,15 @@ def edit_member(request, group_id):
 
         query_res = StoryGroup.objects.get(pk=ObjectId(group_id))
 
+        user = User.objects.get(pk=request.user.pk)
+
         if not query_res:
             raise ObjectDoesNotExist()
+
+        dict_query = query_res.to_dict()
+
+        if user.to_dict() not in dict_query["group_admins"]:
+            raise PermissionError
 
         req_body_json = json.loads(request.body)
 
@@ -321,6 +334,9 @@ def edit_member(request, group_id):
         else:
             res_data, res_status = get_msg('invalid request method', 405)
 
+    except PermissionError as e:
+        res_data, res_status = get_msg(f"user not admin", 403)
+
     except KeyError as e:
         res_data, res_status = get_msg(f"invalid input: {e} is missing", 400)
 
@@ -333,19 +349,26 @@ def edit_member(request, group_id):
     return JsonResponse(res_data, status=res_status)
 
 
-@csrf_exempt
-# TODO: AUTH
+@api_view(['POST', 'DELETE'])
 def edit_admin(request, group_id):
     res_data = {}
     res_status = 200
 
     try:
+
+        query_res = StoryGroup.objects.get(pk=ObjectId(group_id))
+
+        user = User.objects.get(pk=request.user.pk)
+
+        if not query_res:
+            raise ObjectDoesNotExist()
+
+        dict_query = query_res.to_dict()
+
+        if user.to_dict() not in dict_query["group_admins"]:
+            raise PermissionError
+
         if request.method == 'POST':
-
-            query_res = StoryGroup.objects.get(pk=ObjectId(group_id))
-
-            if not query_res:
-                raise ObjectDoesNotExist()
 
             req_body_json = json.loads(request.body)
 
@@ -368,10 +391,6 @@ def edit_admin(request, group_id):
             res_data, res_status = get_msg(f"admin add ok", 200)
 
         elif request.method == 'DELETE':
-            query_res = StoryGroup.objects.get(pk=ObjectId(group_id))
-
-            if not query_res:
-                raise ObjectDoesNotExist()
 
             req_body_json = json.loads(request.body)
 
@@ -401,5 +420,8 @@ def edit_admin(request, group_id):
 
     except Exception as e:
         res_data, res_status = get_msg(f"{e}", 400)
+
+    except PermissionError as e:
+        res_data, res_status = get_msg(f"user not admin", 403)
 
     return JsonResponse(res_data, status=res_status)
