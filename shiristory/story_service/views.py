@@ -292,7 +292,7 @@ def edit_member(request, group_id):
 
         dict_query = query_res.to_dict()
 
-        if user.to_dict() not in dict_query["group_admins"]:
+        if user.to_dict() not in dict_query["group_members"]:
             raise PermissionError
 
         req_body_json = json.loads(request.body)
