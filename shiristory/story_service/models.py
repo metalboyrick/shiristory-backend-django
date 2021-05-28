@@ -63,7 +63,7 @@ class StoryGroup(AbstractBaseModel):
         ONGOING = 0
         FINISHED = 1
 
-    _id = models.ObjectIdField()
+    _id = models.ObjectIdField(primary_key=True)
     group_name = models.CharField(max_length=255, blank=False)
     group_members = models.ArrayReferenceField(
         to=User,
@@ -96,4 +96,4 @@ class StoryGroup(AbstractBaseModel):
     objects = models.DjongoManager()
 
     def get_id(self):
-        return str(self.pk)
+        return self._id

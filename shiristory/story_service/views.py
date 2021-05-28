@@ -80,6 +80,10 @@ def create_group(request):
 
             new_group = StoryGroup()
 
+            new_id = ObjectId()
+
+            new_group._id = new_id
+
             new_group.group_name = req_body_json['group_name']
 
             for member_id in req_body_json['group_members']:
@@ -105,7 +109,7 @@ def create_group(request):
             res_data, res_status = get_msg("success", 200)
 
             res_data = {
-                'group_id': new_group.get_id()
+                'group_id': str(new_id)
             }
 
         except KeyError as e:
