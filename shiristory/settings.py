@@ -39,7 +39,7 @@ APP_URL = env('APP_URL')
 APP_PORT = env.int('APP_PORT', 80)
 APP_WS_PORT = env.int('APP_WS_PORT')
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 
@@ -146,10 +146,10 @@ AUTH_USER_MODEL = 'user_service.User'
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
+        # 'rest_framework.permissions.IsAuthenticated',
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        # 'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
 }
 
