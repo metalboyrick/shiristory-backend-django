@@ -114,6 +114,7 @@ def add_friend(request, friend_username):
 
         if new_friend not in friends_list:
             friends.add(new_friend)
+            new_friend.friends.add(logged_in_user)
             return JsonResponse({"message": "Add friend OK"})
 
         return JsonResponse({"message": "Friend exists!"})
@@ -157,7 +158,10 @@ def delete_friend(request, friend_id):
         if friend_id not in [str(friend._id) for friend in friends_list]:
             return JsonResponse({"message": "Friend does not exist"})
 
-        friends.remove(User.objects.get(pk=ObjectId(friend_id)))
+        delete_friend = User.objects.get(pk=ObjectId(friend_id))
+        delete_friend.friends.remove(logged_in_user)
+
+        friends.remove(delete_friend)
 
         return JsonResponse({"message": "Delete friend OK"})
 
