@@ -11,7 +11,7 @@ class AbstractBaseModel(models.Model):
     def get_id(self):
         return str(self.pk)
 
-    def to_dict(self, fields=None, exclude=None):
+    def to_dict(self, fields=None, exclude=None, nestedExclude=None):
         data = {}
         for f in self._meta.concrete_fields + self._meta.many_to_many:
 
@@ -47,10 +47,10 @@ class AbstractBaseModel(models.Model):
             # Convert ArrayReferenceField datetime field into list of model in dictionary
             elif isinstance(f, ArrayReferenceField):
                 if len(value) != 0:
-                    value = [item.to_dict(exclude=exclude) for item in value]
+                    value = [item.to_dict(exclude=exclude+nestedExclude) for item in value]
 
             elif isinstance(f, ForeignKey):
-                value = value[0].to_dict(exclude=exclude)
+                value = value[0].to_dict(exclude=exclude+nestedExclude)
 
             # Convert ArrayField datetime field into DATETIME_FORMAT
             elif isinstance(f, ArrayField):

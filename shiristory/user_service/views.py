@@ -77,12 +77,13 @@ def reset_password_view(request):
 
 @api_view(['GET', 'PUT'])
 def profile_view(request):
+
     logged_in_user = request.user
 
     if request.method == 'GET':
         return JsonResponse({
             "message": "200 get profile details OK",
-            "user": logged_in_user.to_dict(exclude=['password'])
+            "user": logged_in_user.to_dict(exclude=['password'], nestedExclude=['friends'])
         })
     # PUT request
     else:
