@@ -55,10 +55,16 @@ def get_group_list(request):
 
         group_list = list(page_result.object_list)
 
+        story_types = ['Text', 'Image', 'Audio', 'Video']
+
         for group_item in group_list:
+            story_type = group_item.stories[-1]['story_type']
+            group_summary = group_item.stories[-1]['story_content'] if story_type == 0 else f"[{story_types[story_type]}]"
             res_data['groups'].append({
                 'group_id': str(group_item.pk),
-                'group_name': group_item.group_name
+                'group_name': group_item.group_name,
+                'group_summary': group_summary ,
+                'group_last_edited': group_item.stories[-1]['datetime']
             })
 
     else:
