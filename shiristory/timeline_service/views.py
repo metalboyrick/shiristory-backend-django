@@ -58,7 +58,7 @@ def index(request):
 
 
 @csrf_exempt
-@api_view(['POST'])
+# @api_view(['POST'])
 def create(request):
     content = request.POST.get('content', '')
     inv_link = request.POST.get('inv_link', '')
@@ -82,7 +82,7 @@ def create(request):
 
     post.save()
 
-    return JsonResponse({'post_id': post.get_id(), 'message': 'Create post OK'})
+    return JsonResponse(post.to_dict(exclude=['password', 'friends']))
 
 
 @csrf_exempt

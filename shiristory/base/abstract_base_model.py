@@ -18,7 +18,7 @@ class AbstractBaseModel(models.Model):
             value = f.value_from_object(self)
 
             if isinstance(f, ArrayReferenceField) or isinstance(f, ForeignKey):
-                if type(value) != set:
+                if type(value) not in [set, list]:
                     value = {value}
                 value = f.related_model.objects.filter(pk__in=value)
                 # Convert queryset to list
