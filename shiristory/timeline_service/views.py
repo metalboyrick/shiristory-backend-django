@@ -10,6 +10,7 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view
 
 from shiristory.base.toolkits import save_uploaded_medias
+from shiristory.settings import DATETIME_FORMAT
 from shiristory.timeline_service.models import Post
 from shiristory.user_service.models import User
 
@@ -115,7 +116,8 @@ def add_comment(request, post_id):
 
     # Add post_id for response
     comment['post_id'] = post_id
-    
+    # Convert to proper date format
+    comment['created_at'] = comment['created_at'].strftime(DATETIME_FORMAT)
     return JsonResponse(comment)
 
 
