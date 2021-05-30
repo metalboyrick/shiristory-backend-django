@@ -11,7 +11,7 @@ class AbstractBaseModel(models.Model):
     def get_id(self):
         return str(self.pk)
 
-    def to_dict(self, fields=None, exclude=None, nestedExclude=None):
+    def to_dict(self, fields=None, exclude=[], nestedExclude=[]):
         data = {}
         for f in self._meta.concrete_fields + self._meta.many_to_many:
 

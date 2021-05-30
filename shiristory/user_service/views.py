@@ -78,7 +78,7 @@ def reset_password_view(request):
 @api_view(['GET', 'PUT'])
 def profile_view(request):
 
-    logged_in_user = request.user
+    logged_in_user = User.objects.all().last()
 
     if request.method == 'GET':
         return JsonResponse({
