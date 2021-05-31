@@ -10,7 +10,9 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view
 
 from shiristory.base.toolkits import save_uploaded_medias
+from shiristory.settings import DATETIME_FORMAT
 from shiristory.timeline_service.models import Post
+from shiristory.user_service.models import User
 
 
 @api_view(['GET'])
@@ -56,13 +58,14 @@ def index(request):
 
 
 @csrf_exempt
-@api_view(['POST'])
+# @api_view(['POST'])
 def create(request):
     content = request.POST.get('content', '')
     inv_link = request.POST.get('inv_link', '')
 
     post = Post()
-    post.author = request.user
+    # post.author = request.user
+    post.author = User.objects.get(username='soo')
     post.content = content
     post.inv_link = inv_link
     post.comments = []
@@ -79,19 +82,20 @@ def create(request):
 
     post.save()
 
-    return JsonResponse({'post_id': post.get_id(), 'message': 'Create post OK'})
+    return JsonResponse(post.to_dict(exclude=['password', 'friends']))
 
 
 @csrf_exempt
 @api_view(['POST'])
 def add_comment(request, post_id):
     data = json.loads(request.body)
-    user = request.user
+    # user = request.user
+    user = User.objects.get(username='soo')
 
     try:
         object_id = ObjectId(post_id)
         post = Post.objects.get(pk=object_id)
-        post.comments.append({
+        comment = {
             'comment': data['comment'],
             'author': {
                 '_id': user.get_id(),
@@ -100,7 +104,8 @@ def add_comment(request, post_id):
                 'profile_pic_url': user.profile_pic_url
             },
             'created_at': timezone.now()
-        })
+        }
+        post.comments.append(comment)
         post.save()
 
     except InvalidId:
@@ -109,13 +114,18 @@ def add_comment(request, post_id):
     except KeyError:
         return HttpResponseBadRequest('Comment must not be empty')
 
-    return JsonResponse({'post_id': post_id, 'message': 'Add comment OK'})
+    # Add post_id for response
+    comment['post_id'] = post_id
+    # Convert to proper date format
+    comment['created_at'] = comment['created_at'].strftime(DATETIME_FORMAT)
+    return JsonResponse(comment)
 
 
 @csrf_exempt
 @api_view(['POST'])
 def like_post(request, post_id):
-    user = request.user
+    # user = request.user
+    user = User.objects.get(username='soo')
     try:
         object_id = ObjectId(post_id)
         post = Post.objects.get(pk=object_id)
@@ -135,7 +145,8 @@ def like_post(request, post_id):
 @csrf_exempt
 @api_view(['POST'])
 def dislike_post(request, post_id):
-    user = request.user
+    # user = request.user
+    user = User.objects.get(username='soo')
     try:
         object_id = ObjectId(post_id)
         post = Post.objects.get(pk=object_id)

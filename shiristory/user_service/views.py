@@ -1,22 +1,24 @@
 import json
 
+from bson import ObjectId
+from bson.errors import InvalidId
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+
 # JWT imports
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 
 from shiristory import settings
+from shiristory.base.toolkits import save_uploaded_medias
 from shiristory.user_service.models import User
 
 
 def index(request):
     return HttpResponse("Hello, world. You're at the user index.")
 
-
 @api_view(['POST'])
 @permission_classes(())
 @authentication_classes(())
-@csrf_exempt
 def signup_view(request):
     json_data = json.loads(request.body)
     try:
@@ -48,7 +50,6 @@ def signup_view(request):
 
 
 @api_view(['POST'])
-@csrf_exempt
 def reset_password_view(request):
     json_data = json.loads(request.body)
     try:
@@ -76,26 +77,97 @@ def reset_password_view(request):
 
 @api_view(['GET', 'PUT'])
 def profile_view(request):
-    logged_in_user = request.user
+
+    logged_in_user = User.objects.all().last()
 
     if request.method == 'GET':
         return JsonResponse({
             "message": "200 get profile details OK",
-            "user": logged_in_user.to_dict(exclude=['password'])
+            "user": logged_in_user.to_dict(exclude=['password'], nestedExclude=['friends'])
         })
-
     # PUT request
     else:
-        json_data = json.loads(request.body)
-        try:
-            new_nickname = json_data['new_nickname']
-            new_bio = json_data['new_bio']
 
-        except KeyError:
-            return JsonResponse({"message": "400 Missing nickname field"}, status=400)
+        logged_in_user.nickname = request.data.get("new_nickname", logged_in_user.nickname)
+        logged_in_user.bio = request.data.get("new_bio", logged_in_user.bio)
 
-        logged_in_user.nickname = new_nickname
-        logged_in_user.nickname = new_bio
+        if len(request.FILES) != 0:
+            try:
+                media = save_uploaded_medias(request, 'user')
+                url = media[0]
+                logged_in_user.profile_pic_url = url
+
+            except Exception as e:
+                logged_in_user.save()
+                return JsonResponse(str(e), status=400)
+
         logged_in_user.save()
+        return JsonResponse({"message": "Update profile info OK"})
 
-    return JsonResponse({"message": "200 Update profile info OK"})
+
+@api_view(['POST'])
+def add_friend(request, friend_username):
+    try:
+        logged_in_user = request.user
+        friends = logged_in_user.friends
+        friends_list = list(friends.get_queryset())
+        new_friend = User.objects.get(username=friend_username)
+
+        if new_friend not in friends_list:
+            friends.add(new_friend)
+            new_friend.friends.add(logged_in_user)
+            return JsonResponse({"message": "Add friend OK"})
+
+        return JsonResponse({"message": "Friend exists!"})
+
+    except User.DoesNotExist:
+        return JsonResponse({"message": "User does not exist"})
+
+    except InvalidId:
+        return JsonResponse({"message": "Invalid Id"})
+
+
+@api_view(['GET'])
+def search_friend(request, query):
+    try:
+        logged_in_user = request.user
+        friends = logged_in_user.friends
+        friends_list = list(friends.get_queryset())
+
+        matched = []
+        for friend in friends_list:
+            if query in friend.nickname:
+                matched.append(friend.to_dict(exclude=['password']))
+        return JsonResponse({
+            "message": "Search friend OK",
+            "candidates": matched
+        })
+    except User.DoesNotExist:
+        return JsonResponse({"message": "User does not exist"})
+
+    except InvalidId:
+        return JsonResponse({"message": "Invalid Id"})
+
+
+@api_view(['DELETE'])
+def delete_friend(request, friend_id):
+    try:
+        logged_in_user = request.user
+        friends = logged_in_user.friends
+        friends_list = list(friends.get_queryset())
+
+        if friend_id not in [str(friend._id) for friend in friends_list]:
+            return JsonResponse({"message": "Friend does not exist"})
+
+        delete_friend = User.objects.get(pk=ObjectId(friend_id))
+        delete_friend.friends.remove(logged_in_user)
+
+        friends.remove(delete_friend)
+
+        return JsonResponse({"message": "Delete friend OK"})
+
+    except User.DoesNotExist:
+        return JsonResponse({"message": "User does not exist"})
+
+    except InvalidId:
+        return JsonResponse({"message": "Invalid Id"})
