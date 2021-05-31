@@ -8,14 +8,27 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view
 
+from shiristory.base.toolkits import *
 from shiristory.settings import DATETIME_FORMAT
 from shiristory.story_service.models import StoryGroup
 from shiristory.user_service.models import User
 
 
+
 def get_msg(message, status):
     return {'message': f'{status} {message}'}, status
 
+@api_view(['PUT'])
+def upload_file(request):
+
+    try:
+        file_url = save_uploaded_medias(request, 'story')
+
+    except Exception as e:
+        return JsonResponse({'message': f'{e}'}, status=500)
+
+
+    return JsonResponse({'file_url': file_url[0]}, status=200)
 
 @api_view(['GET'])
 def get_group_list(request):
@@ -435,3 +448,5 @@ def edit_admin(request, group_id):
         res_data, res_status = get_msg(f"user not admin", 403)
 
     return JsonResponse(res_data, status=res_status)
+
+
