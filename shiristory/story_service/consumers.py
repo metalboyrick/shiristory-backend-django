@@ -1,8 +1,13 @@
 import json
+from datetime import datetime
 
 from bson import ObjectId
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
+
+from shiristory.story_service.models import StoryGroup, StoryObject
+from shiristory.settings import DATETIME_FORMAT
+
 
 class TestConsumer(WebsocketConsumer):
     def connect(self):
@@ -53,9 +58,31 @@ class StoryConsumer(WebsocketConsumer):
             }
         )
 
-    # Receive message from room group
+    # Receive message from room group (this is an event handler)
     def chat_message(self, event):
         recv_message = event['message']
 
+        new_story_id = ObjectId()
+        new_datetime = datetime.now()
+        recv_message["story_id"] = str(new_story_id)
+        recv_message["datetime"] = new_datetime.strftime(DATETIME_FORMAT)
+
+        # TODO: write to cache here
+
+
         # Send message to WebSocket
         self.send(text_data=json.dumps(recv_message))
+
+        # TODO: write to main db here?
+        current_group = StoryGroup.objects.get(_id=ObjectId(self.story_id))
+        current_group.stories.append({
+            '_id': new_story_id ,
+            'author': recv_message['author'],
+            'story_type': recv_message['story_type'],
+            'story_content': recv_message['story_content'],
+            'next_story_type': recv_message['next_story_type'],
+            'datetime': new_datetime,
+            'vote_count': 0
+        })
+
+        current_group.save()

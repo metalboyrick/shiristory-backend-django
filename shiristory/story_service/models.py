@@ -16,7 +16,7 @@ class StoryObject(AbstractBaseModel):
         VIDEO = 3
 
     _id = models.ObjectIdField()
-    author = models.CharField(max_length=255)
+    author = models.CharField(max_length=255, unique=True)
     story_type = models.IntegerField(choices=StoryType.choices, blank=False)
     story_content = models.CharField(max_length=255, blank=False)
     next_story_type = models.IntegerField(choices=StoryType.choices, blank=False)
