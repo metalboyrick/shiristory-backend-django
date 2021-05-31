@@ -92,7 +92,7 @@ def profile_view(request):
         return JsonResponse(
             {
                 "message": "200 get profile details OK",
-                "user": logged_in_user.to_dict(exclude=["password"]),
+                "user": logged_in_user.to_dict(exclude=["password"],nestedExclude=["friends"]),
             }
         )
     # PUT request
