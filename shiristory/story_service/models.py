@@ -3,8 +3,11 @@ import datetime
 from django import forms
 from djongo import models
 
+from shiristory.base.abstract_base_model import AbstractBaseModel
+from shiristory.user_service.models import User
 
-class StoryObject(models.Model):
+
+class StoryObject(AbstractBaseModel):
     # Choices for story type
     class StoryType(models.IntegerChoices):
         TEXT = 0
@@ -12,26 +15,32 @@ class StoryObject(models.Model):
         AUDIO = 2
         VIDEO = 3
 
-    story_id = models.ObjectIdField(primary_key=True)
-    user_id = models.BigIntegerField(blank=False)
+    _id = models.ObjectIdField()
+    author = models.CharField(max_length=255, unique=True)
     story_type = models.IntegerField(choices=StoryType.choices, blank=False)
     story_content = models.CharField(max_length=255, blank=False)
     next_story_type = models.IntegerField(choices=StoryType.choices, blank=False)
     datetime = models.DateTimeField(default=datetime.datetime.now())
     vote_count = models.IntegerField(default=0, blank=False)
 
+    def get_id(self):
+        return str(self.pk)
+
+    class Meta:
+        abstract = True
+
+    objects = models.DjongoManager()
+
 
 class StoryObjectForm(forms.ModelForm):
     class Meta:
         model = StoryObject
         fields = (
-            'story_id', 'user_id', 'story_type', 'story_content', 'next_story_type', 'vote_count'
+            'author', 'story_type', 'story_content', 'next_story_type', 'vote_count'
         )
 
 
-class VotePool(models.Model):
-    _id = models.ObjectIdField(primary_key=True)
-
+class VotePool(AbstractBaseModel):
     vote_end_time = models.DateTimeField()
 
     candidates = models.ArrayField(
@@ -40,22 +49,34 @@ class VotePool(models.Model):
         blank=True
     )
 
+    class Meta:
+        abstract = True
 
-class Group(models.Model):
+    def get_id(self):
+        return str(self.pk)
 
-    @staticmethod
-    def default_array():
-        return []
+    objects = models.DjongoManager()
 
+class StoryGroup(AbstractBaseModel):
     # choices for story status
     class StoryStatus(models.IntegerChoices):
         ONGOING = 0
         FINISHED = 1
 
-    group_id = models.ObjectIdField(primary_key=True)
+    _id = models.ObjectIdField(primary_key=True)
     group_name = models.CharField(max_length=255, blank=False)
-    group_members = models.JSONField(default=default_array, blank=False)
-    group_admins = models.JSONField(default=default_array, blank=False)
+    group_members = models.ArrayReferenceField(
+        to=User,
+        on_delete=models.CASCADE,
+        related_name='group_members'
+    )
+
+    group_admins = models.ArrayReferenceField(
+        to=User,
+        on_delete=models.CASCADE,
+        related_name='group_admins'
+    )
+
     date_created = models.DateTimeField(default=datetime.datetime.now())
     last_modified = models.DateTimeField(auto_now=True)
     status = models.IntegerField(choices=StoryStatus.choices, blank=False)
@@ -71,3 +92,8 @@ class Group(models.Model):
     vote_pool = models.EmbeddedField(
         model_container=VotePool
     )
+
+    objects = models.DjongoManager()
+
+    def get_id(self):
+        return self._id
