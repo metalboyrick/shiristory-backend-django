@@ -111,6 +111,8 @@ def create_group(request):
 
             new_group.group_admins.add(user)
 
+            new_group.status = StoryGroup.StoryStatus.ONGOING
+
             new_group.vote_duration = datetime.timedelta(seconds=req_body_json['vote_duration'])
             new_group.vote_threshold = req_body_json['vote_threshold']
             new_group.stories = [{
