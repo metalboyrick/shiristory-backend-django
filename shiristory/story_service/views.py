@@ -180,8 +180,8 @@ def get_group_info(request, group_id):
     return JsonResponse(res_data, status=res_status)
 
 
-@api_view(['GET'])
-def get_stories(request, group_id):
+@api_view(['GET', 'DELETE'])
+def edit_stories(request, group_id):
     res_data = {}
     res_status = 200
 
@@ -228,6 +228,37 @@ def get_stories(request, group_id):
                         'vote_count': entry['vote_count']
                     }
                 )
+
+        except ObjectDoesNotExist as e:
+            res_data, res_status = get_msg("group not found", 404)
+
+        except PermissionError as e:
+            res_data, res_status = get_msg("unauthorized access", 403)
+
+    elif request.method == 'DELETE':
+        try:
+            query_res = StoryGroup.objects.get(pk=ObjectId(group_id))
+
+            if user.to_dict() not in query_res.to_dict()["group_members"]:
+                raise PermissionError
+
+            # TODO: add delete logic
+            body = request.body
+            req_body_json = json.loads(request.body)
+
+            target_story = None
+            for elem in query_res.stories:
+                if str(elem["_id"]) == req_body_json["story_id"]:
+                    target_story = elem
+                    break
+
+            if target_story:
+                query_res.stories.remove(target_story)
+
+            query_res.save()
+
+            res_data, res_status = get_msg("delete story ok", 200)
+
 
         except ObjectDoesNotExist as e:
             res_data, res_status = get_msg("group not found", 404)
