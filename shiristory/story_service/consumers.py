@@ -50,7 +50,12 @@ class StoryConsumer(WebsocketConsumer):
         text_data_json = json.loads(text_data)
 
         if text_data_json["biztype"] == "chat_message":
-            # Send message to room group
+            new_story_id = ObjectId()
+            new_datetime = datetime.now()
+            text_data_json["story_id"] = str(new_story_id)
+            text_data_json["datetime"] = new_datetime.strftime(DATETIME_FORMAT)
+
+            # Send message to room group (This repeats and sends to everyone in the socket room)
             async_to_sync(self.channel_layer.group_send)(
                 self.story_id,
                 {
@@ -59,31 +64,24 @@ class StoryConsumer(WebsocketConsumer):
                 }
             )
 
+            # write to main db
+            current_group = StoryGroup.objects.get(_id=ObjectId(self.story_id))
+            current_group.stories.append({
+                '_id': new_story_id,
+                'author': text_data_json['author'],
+                'story_type': text_data_json['story_type'],
+                'story_content': text_data_json['story_content'],
+                'next_story_type': text_data_json['next_story_type'],
+                'datetime': new_datetime,
+                'vote_count': 0
+            })
+
+            current_group.save()
+
     # Receive message from room group (this is an event handler)
     def chat_message(self, event):
         recv_message = event['message']
 
-        new_story_id = ObjectId()
-        new_datetime = datetime.now()
-        recv_message["story_id"] = str(new_story_id)
-        recv_message["datetime"] = new_datetime.strftime(DATETIME_FORMAT)
-
-        # TODO: write to cache here
-
-
         # Send message to WebSocket
         self.send(text_data=json.dumps(recv_message))
 
-        # TODO: write to main db here?
-        current_group = StoryGroup.objects.get(_id=ObjectId(self.story_id))
-        current_group.stories.append({
-            '_id': new_story_id ,
-            'author': recv_message['author'],
-            'story_type': recv_message['story_type'],
-            'story_content': recv_message['story_content'],
-            'next_story_type': recv_message['next_story_type'],
-            'datetime': new_datetime,
-            'vote_count': 0
-        })
-
-        current_group.save()
