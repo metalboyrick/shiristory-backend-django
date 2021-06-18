@@ -49,14 +49,15 @@ class StoryConsumer(WebsocketConsumer):
     def receive(self, text_data):
         text_data_json = json.loads(text_data)
 
-        # Send message to room group
-        async_to_sync(self.channel_layer.group_send)(
-            self.story_id,
-            {
-                'type': 'chat_message',
-                'message': text_data_json
-            }
-        )
+        if text_data_json["biztype"] == "chat_message":
+            # Send message to room group
+            async_to_sync(self.channel_layer.group_send)(
+                self.story_id,
+                {
+                    'type': 'chat_message',
+                    'message': text_data_json
+                }
+            )
 
     # Receive message from room group (this is an event handler)
     def chat_message(self, event):
