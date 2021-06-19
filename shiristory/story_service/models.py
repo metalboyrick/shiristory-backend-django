@@ -12,8 +12,8 @@ class StoryObject(AbstractBaseModel):
     class StoryType(models.IntegerChoices):
         TEXT = 0
         IMAGE = 1
-        AUDIO = 2
-        VIDEO = 3
+        VIDEO = 2
+        AUDIO = 3
 
     _id = models.ObjectIdField()
     author = models.CharField(max_length=255, unique=True)
