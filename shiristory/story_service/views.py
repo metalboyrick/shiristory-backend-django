@@ -155,7 +155,7 @@ def get_group_info(request, group_id):
             object_id = ObjectId(group_id)
             query_res = StoryGroup.objects.get(pk=object_id)
 
-            if user.to_dict(nestedExclude=["friends"]) not in query_res.to_dict(nestedExclude=["friends"])["group_members"]:
+            if user not in list(query_res.group_members.get_queryset()):
                 raise PermissionError
 
             res_data['group_name'] = query_res.group_name
@@ -197,7 +197,7 @@ def edit_stories(request, group_id):
 
             query_res = StoryGroup.objects.get(pk=ObjectId(group_id))
 
-            if user.to_dict(nestedExclude=["friends"]) not in query_res.to_dict(nestedExclude=["friends"])["group_members"]:
+            if user not in list(query_res.group_members.get_queryset()):
                 raise PermissionError
 
             paginator = Paginator(query_res.stories, page_size)
@@ -241,7 +241,7 @@ def edit_stories(request, group_id):
         try:
             query_res = StoryGroup.objects.get(pk=ObjectId(group_id))
 
-            if user.to_dict(nestedExclude=["friends"]) not in query_res.to_dict(nestedExclude=["friends"])["group_members"]:
+            if user not in list(query_res.group_members.get_queryset()):
                 raise PermissionError
 
             # TODO: add delete logic
@@ -288,9 +288,7 @@ def edit_group_info(request, group_id):
             if not query_res:
                 raise ObjectDoesNotExist()
 
-            dict_query = query_res.to_dict(nestedExclude=["friends"])
-
-            if user.to_dict(nestedExclude=["friends"]) not in dict_query["group_admins"]:
+            if user not in list(query_res.group_admins.get_queryset()):
                 raise PermissionError
 
             req_body_json = json.loads(request.body)
