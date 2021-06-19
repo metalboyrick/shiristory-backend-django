@@ -19,8 +19,11 @@ from shiristory.user_service.models import User
 def index(request):
     page = request.GET.get('page', 1)
     page_size = request.GET.get('size', 10)
+    user = request.user
+    friends = list(user.friends.get_queryset())
+    friends.append(user.pk)
 
-    posts = Post.objects.all().order_by('-updated_at')
+    posts = Post.objects.all().filter(author__in=friends).order_by('-updated_at')
     paginator = Paginator(posts, page_size, allow_empty_first_page=True)
 
     try:
