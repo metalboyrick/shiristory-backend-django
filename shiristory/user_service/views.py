@@ -151,7 +151,7 @@ def search_friend(request, query):
 
         matched = []
         for friend in friends_list:
-            if query in friend.nickname:
+            if query.upper() in friend.nickname.upper():
                 matched.append(friend.to_dict(exclude=["password","friends"]))
         return JsonResponse({"message": "Search friend OK", "candidates": matched})
     except User.DoesNotExist:
