@@ -1,7 +1,9 @@
 from django.contrib import admin
 from django.urls import include, path
+from django.views.generic import TemplateView
 
 urlpatterns = [
+    path('', TemplateView.as_view(template_name='index.html')),
     path('user/', include('shiristory.user_service.urls')),
     path('story/', include('shiristory.story_service.urls')),
     path('timeline/', include('shiristory.timeline_service.urls')),

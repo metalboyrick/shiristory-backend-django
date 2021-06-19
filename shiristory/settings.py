@@ -72,7 +72,9 @@ ROOT_URLCONF = 'shiristory.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [
+            os.path.join(BASE_DIR, 'shiristory/base')
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
