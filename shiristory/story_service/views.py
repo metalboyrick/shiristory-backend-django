@@ -155,7 +155,7 @@ def get_group_info(request, group_id):
             object_id = ObjectId(group_id)
             query_res = StoryGroup.objects.get(pk=object_id)
 
-            if user.to_dict() not in query_res.to_dict()["group_members"]:
+            if user.to_dict(nestedExclude=["friends"]) not in query_res.to_dict(nestedExclude=["friends"])["group_members"]:
                 raise PermissionError
 
             res_data['group_name'] = query_res.group_name
