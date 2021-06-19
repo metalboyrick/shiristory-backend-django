@@ -348,7 +348,7 @@ def edit_member(request, group_id):
 
         dict_query = query_res.to_dict(nestedExclude=["friends"])
 
-        if user.to_dict(nestedExclude=["friends"]) not in dict_query["group_members"]:
+        if user not in list(query_res.group_members.get_queryset()):
             raise PermissionError
 
         req_body_json = json.loads(request.body)
