@@ -86,7 +86,7 @@ def reset_password_view(request):
 @api_view(["GET", "PUT"])
 def profile_view(request):
 
-    logged_in_user = User.objects.all()[1]
+    logged_in_user = request.user
 
     if request.method == "GET":
         return JsonResponse(
@@ -119,8 +119,7 @@ def profile_view(request):
 @api_view(["POST"])
 def add_friend(request, friend_username):
     try:
-        # TODO Change logged_in_user to request.user
-        logged_in_user = User.objects.all()[1]
+        logged_in_user = request.user
 
         if friend_username == logged_in_user.username:
             return JsonResponse({"message": "Cannot add self as friend"},status=400)
@@ -146,7 +145,7 @@ def add_friend(request, friend_username):
 @api_view(["GET"])
 def search_friend(request, query):
     try:
-        logged_in_user = User.objects.all()[1]
+        logged_in_user = request.user
         friends = logged_in_user.friends
         friends_list = list(friends.get_queryset())
 
