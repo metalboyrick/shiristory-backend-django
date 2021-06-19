@@ -1,5 +1,6 @@
 from django.urls import path
 
+
 from . import views
 
 urlpatterns = [
@@ -7,7 +8,7 @@ urlpatterns = [
     path('upload' , views.upload_file, name='Upload files'),
     path('create/', views.create_group, name='Create new group'),
     path('<str:group_id>/info/', views.get_group_info, name='Get Group Info'),
-    path('<str:group_id>/stories/', views.get_stories, name='Get stories'),
+    path('<str:group_id>/stories/', views.edit_stories, name='Edit stories'),
 
     # Admin activities
     path('<str:group_id>/admin/', views.edit_admin, name='Edit admins'),
