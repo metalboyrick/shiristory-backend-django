@@ -2,7 +2,7 @@ version: '3'
 
 services:
   shiristory:
-    container_name: shiristory
+    container_name: course11-shiristory
     restart: always
     build: .
     depends_on:
@@ -18,7 +18,7 @@ services:
     command: python manage.py runserver 0.0.0.0:8000
 
   nginx:
-    container_name: nginx
+    container_name: course11-nginx
     restart: always
     build: ./nginx
     ports:
@@ -33,7 +33,7 @@ services:
       - web_network
 
   redis:
-    container_name: redis
+    container_name: course11-redis
     restart: always
     image: redis:latest
     ports:
@@ -42,7 +42,7 @@ services:
       - db_network
 
   mongodb:
-    container_name: mongodb
+    container_name: course11-mongodb
     restart: always
     build: ./mongodb
     ports:

@@ -58,14 +58,13 @@ def index(request):
 
 
 @csrf_exempt
-# @api_view(['POST'])
+@api_view(['POST'])
 def create(request):
     content = request.POST.get('content', '')
     inv_link = request.POST.get('inv_link', '')
 
     post = Post()
-    # post.author = request.user
-    post.author = User.objects.get(username='soo')
+    post.author = request.user
     post.content = content
     post.inv_link = inv_link
     post.comments = []
@@ -89,8 +88,7 @@ def create(request):
 @api_view(['POST'])
 def add_comment(request, post_id):
     data = json.loads(request.body)
-    # user = request.user
-    user = User.objects.get(username='soo')
+    user = request.user
 
     try:
         object_id = ObjectId(post_id)
@@ -124,8 +122,7 @@ def add_comment(request, post_id):
 @csrf_exempt
 @api_view(['POST'])
 def like_post(request, post_id):
-    # user = request.user
-    user = User.objects.get(username='soo')
+    user = request.user
     try:
         object_id = ObjectId(post_id)
         post = Post.objects.get(pk=object_id)
@@ -145,8 +142,7 @@ def like_post(request, post_id):
 @csrf_exempt
 @api_view(['POST'])
 def dislike_post(request, post_id):
-    # user = request.user
-    user = User.objects.get(username='soo')
+    user = request.user
     try:
         object_id = ObjectId(post_id)
         post = Post.objects.get(pk=object_id)
