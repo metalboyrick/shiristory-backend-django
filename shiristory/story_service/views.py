@@ -45,7 +45,7 @@ def get_group_list(request):
         groups_query = StoryGroup.objects.all().order_by('-last_modified')
         user_groups = []
         for group in groups_query:
-            if user.to_dict() in group.to_dict()["group_members"]:
+            if user.to_dict(nestedExclude=["friends"]) in group.to_dict(nestedExclude=["friends"])["group_members"]:
                 user_groups.append(group)
 
         paginator = Paginator(user_groups, page_size)
